@@ -1,0 +1,18 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v2.0.1
+_src_path: https://github.com/napari/napari-plugin-template
+display_name: OME-Zarrpari
+email: dstansby@gmail.com
+full_name: David Stansby
+github_repository_url: https://github.com/ome-zarr-models/ome-zarrpari
+github_username_or_organization: ome-zarr-models
+include_reader_plugin: false
+include_sample_data_plugin: false
+include_widget_plugin: true
+include_writer_plugin: false
+install_dependabot: true
+install_precommit: true
+license: BSD-3
+module_name: ome_zarrpari
+plugin_name: ome-zarrpari
+short_description: A plugin to load and use OME-Zarr data

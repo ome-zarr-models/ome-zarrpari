@@ -6,31 +6,12 @@ visibility: public
 # categories: []
 contributions:
   commands:
-    - id: ome-zarrpari.make_container_widget
-      python_name: ome_zarrpari:ImageThreshold
-      title: Make threshold Container widget
-    - id: ome-zarrpari.make_magic_widget
-      python_name: ome_zarrpari:threshold_magic_widget
-      title: Make threshold magic widget
-    - id: ome-zarrpari.make_function_widget
-      python_name: ome_zarrpari:threshold_autogenerate_widget
-      title: Make threshold function widget
     - id: ome-zarrpari.make_qwidget
-      python_name: ome_zarrpari:ExampleQWidget
-      title: Make example QWidget
+      python_name: ome_zarrpari:OMEZarrpariWidget
+      title: Make OME-Zarrpari widget
   widgets:
-    - command: ome-zarrpari.make_container_widget
-      display_name: Container Threshold
-    - command: ome-zarrpari.make_magic_widget
-      display_name: Magic Threshold
-    - command: ome-zarrpari.make_function_widget
-      autogenerate: true
-      display_name: Autogenerate Threshold
     - command: ome-zarrpari.make_qwidget
-      display_name: Example QWidget
+      display_name: OME-Zarrpari
   menus:
     napari/layers/segment:
-      - command: ome-zarrpari.make_container_widget
-      - command: ome-zarrpari.make_magic_widget
-      - command: ome-zarrpari.make_function_widget
       - command: ome-zarrpari.make_qwidget

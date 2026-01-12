@@ -60,6 +60,10 @@ Distributed under the terms of the [BSD-3] license,
 
 If you encounter any problems, please [file an issue] along with a detailed description.
 
+## Roadmap
+
+1. A widget with a textbox and "load" button to load a single remote OME-Zarr image
+
 [napari]: https://github.com/napari/napari
 [copier]: https://copier.readthedocs.io/en/stable/
 [@napari]: https://github.com/napari

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
@@ -20,6 +20,11 @@ from qtpy.QtWidgets import QLabel
 SUPPORTED_CLASSES = (
     ome_zarr_models.v04.Image,
     ome_zarr_models.v05.Image,
+)
+
+AnyMultiscale = (
+    ome_zarr_models.v04.multiscales.Multiscale
+    | ome_zarr_models.v05.multiscales.Multiscale
 )
 
 
@@ -120,38 +125,43 @@ class OMEZarrpariWidget(QWidget):
 
     def _add_multiscale_layer(
         self,
-        multiscale: (
-            ome_zarr_models.v04.multiscales.Multiscale
-            | ome_zarr_models.v05.multiscales.Multiscale
-        ),
+        multiscale: AnyMultiscale,
         zarr_group: zarr.Group,
         *,
         layer_type: Literal["image", "labels"],
         visible: bool = True,
     ) -> None:
-        arrays = []
-        for dataset in multiscale.datasets:
-            array_store = zarr_group.store_path / dataset.path
-            arrays.append(
-                zarr.open_array(
-                    array_store,
-                    zarr_format=(
-                        2
-                        if isinstance(
-                            multiscale,
-                            ome_zarr_models.v04.multiscales.Multiscale,
-                        )
-                        else 3
-                    ),
-                )
+        """
+        Add a OME-Zarr multiscales dataset to the napari viewer.
+        """
+        arrays = [
+            zarr.open_array(
+                store=zarr_group.store_path / dataset.path,
+                zarr_format=zarr_group.metadata.zarr_format,
             )
+            for dataset in multiscale.datasets
+        ]
+        axis_labels_raw = [axis.name for axis in multiscale.axes]
+        if any(label is None for label in axis_labels_raw):
+            axis_labels = None
+        else:
+            axis_labels = tuple(str(label) for label in axis_labels_raw)
 
-        # TODO: pass axis labels down
+        print(axis_labels)
+
         if layer_type == "image":
             self.viewer.add_image(
-                arrays, name=multiscale.name, multiscale=True, visible=visible
+                arrays,
+                name=multiscale.name,
+                multiscale=True,
+                visible=visible,
+                axis_labels=axis_labels,
             )
         elif layer_type == "labels":
             self.viewer.add_labels(
-                arrays, name=multiscale.name, multiscale=True, visible=visible
+                arrays,
+                name=multiscale.name,
+                multiscale=True,
+                visible=visible,
+                axis_labels=axis_labels,
             )

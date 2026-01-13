@@ -84,7 +84,7 @@ fallback_version = "0.0.1+nogit"
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = [
-    "-ra", "--showlocals", "--strict-markers", "--strict-config", "--cov=src/", "--cov-report=html"
+    "-ra", "--showlocals", "--strict-markers", "--strict-config", "--cov=src/", "--cov-report=html", "-vv"
 ]
 xfail_strict = true
 filterwarnings = [

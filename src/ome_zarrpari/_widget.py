@@ -141,21 +141,19 @@ class OMEZarrpariWidget(QWidget):
             )
             for dataset in multiscale.datasets
         ]
-        axis_labels_raw = [axis.name for axis in multiscale.axes]
-        if any(label is None for label in axis_labels_raw):
-            axis_labels = None
-        else:
-            axis_labels = tuple(str(label) for label in axis_labels_raw)
-
-        print(axis_labels)
-
+        axis_labels = _get_axis_names(multiscale)
         if layer_type == "image":
+            channel_axis = _get_channel_axis(multiscale)
+            # If there's a channel axis, remove the associated axis label
+            if channel_axis is not None and axis_labels is not None:
+                axis_labels.pop(channel_axis)
             self.viewer.add_image(
                 arrays,
                 name=multiscale.name,
                 multiscale=True,
                 visible=visible,
                 axis_labels=axis_labels,
+                channel_axis=channel_axis,
             )
         elif layer_type == "labels":
             self.viewer.add_labels(
@@ -165,3 +163,28 @@ class OMEZarrpariWidget(QWidget):
                 visible=visible,
                 axis_labels=axis_labels,
             )
+
+
+def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
+    """
+    Get axis labels from Multiscale metadata.
+    """
+    axis_labels_raw = [axis.name for axis in multiscale.axes]
+    if any(label is None for label in axis_labels_raw):
+        print(
+            f"Warning: At least one axis label is None for {multiscale.name}, "
+            "not setting any axis labels."
+        )
+        return None
+    else:
+        return [str(label) for label in axis_labels_raw]
+
+
+def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:
+    """
+    Get channel axis from Multiscale metadata.
+    """
+    for i, axis in enumerate(multiscale.axes):
+        if axis.type == "channel":
+            return i
+    return None

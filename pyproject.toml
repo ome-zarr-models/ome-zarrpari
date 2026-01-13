@@ -34,7 +34,8 @@ dependencies = [
     "ome-zarr-models",
     "zarr[remote]",
     "requests",
-    "aiohttp"
+    "aiohttp",
+    "gcsfs"
 ]
 
 [project.optional-dependencies]
@@ -82,9 +83,13 @@ fallback_version = "0.0.1+nogit"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+addopts = [
+    "-ra", "--showlocals", "--strict-markers", "--strict-config", "--cov=src/", "--cov-report=html"
+]
 xfail_strict = true
-# filterwarnings = ["error"]  # recommended by PP309; deprecation warnings cause failures so leaving for the user to enable if desired
+filterwarnings = [
+    "error",
+    "ignore:Pickle, copy, and deepcopy support will be removed from itertools in Python 3.14:DeprecationWarning"]
 log_cli_level = "INFO"
 testpaths = ["tests"]
 

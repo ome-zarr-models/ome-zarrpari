@@ -12,11 +12,13 @@ def test_example_q_widget(make_napari_viewer, capsys):
 
     # create our widget, passing in the viewer
     widget = OMEZarrpariWidget(viewer)
+    assert widget.load_pane_status_text == ""
     # Load an image
     widget._load_ome_zarr(
         "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0066/ExpD_chicken_embryo_MIP.ome.zarr",
         visible=False,
     )
+    assert widget.load_pane_status_text == "Successfully loaded"
 
     # read captured output and check that it's as we expected
     # captured = capsys.readouterr()

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Literal
 
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
@@ -51,6 +51,10 @@ class OMEZarrpariWidget(QWidget):
         layout.addWidget(self.status_text)
         layout.addStretch()  # Push everything to the top
         self.setLayout(layout)
+
+    @property
+    def load_pane_status_text(self) -> str:
+        return self.status_text.text()
 
     def _on_load(self) -> None:
         path = self.text_box.text()

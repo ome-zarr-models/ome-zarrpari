@@ -52,7 +52,8 @@ dev = [
     "pytest-recording",
     "napari[pyside6]",
     "mypy",
-    "ruff"
+    "ruff",
+    "zensical==0.0.26",
 ]
 
 [project.entry-points."napari.manifest"]

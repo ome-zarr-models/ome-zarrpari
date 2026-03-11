@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 from ome_zarrpari._widget import OMEZarrpariWidget

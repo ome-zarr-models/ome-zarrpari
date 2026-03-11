@@ -5,6 +5,7 @@ import ome_zarr_models.v04.multiscales
 import ome_zarr_models.v05.multiscales
 import zarr
 from ome_zarr_models import open_ome_zarr
+from ome_zarr_models.common.coordinate_transformations import VectorScale
 from qtpy.QtWidgets import (
     QLineEdit,
     QPushButton,
@@ -147,11 +148,17 @@ class OMEZarrpariWidget(QWidget):
         ]
         axis_labels = _get_axis_names(multiscale)
         axis_units = _get_axis_units(multiscale)
+        scale = _get_scale(multiscale)
         if layer_type == "image":
             channel_axis = _get_channel_axis(multiscale)
-            # If there's a channel axis, remove the associated axis label
-            if channel_axis is not None and axis_labels is not None:
-                axis_labels.pop(channel_axis)
+            # If there's a channel axis, remove the associated label/units/scale
+            if channel_axis is not None:
+                scale.pop(channel_axis)
+                if axis_labels is not None:
+                    axis_labels.pop(channel_axis)
+                if axis_units is not None:
+                    axis_units.pop(channel_axis)
+
             self.viewer.add_image(
                 arrays,
                 name=multiscale.name,
@@ -160,6 +167,7 @@ class OMEZarrpariWidget(QWidget):
                 axis_labels=axis_labels,
                 channel_axis=channel_axis,
                 units=axis_units,
+                scale=scale,
             )
         elif layer_type == "labels":
             self.viewer.add_labels(
@@ -169,6 +177,7 @@ class OMEZarrpariWidget(QWidget):
                 visible=visible,
                 axis_labels=axis_labels,
                 units=axis_units,
+                scale=scale,
             )
 
 
@@ -202,6 +211,16 @@ def _get_axis_units(multiscale: AnyMultiscale) -> list[str] | None:
         return None
     else:
         return [str(unit) for unit in axis_units_raw]
+
+
+def _get_scale(multiscale: AnyMultiscale) -> list[float]:
+    # datasets[0] is the highest resolution
+    scale_transform = multiscale.datasets[0].coordinateTransformations[0]
+    if isinstance(scale_transform, VectorScale):
+        return scale_transform.scale
+    else:
+        # Scale is stored in a Zarr array, default to no scaling
+        return [1] * multiscale.ndim
 
 
 def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:

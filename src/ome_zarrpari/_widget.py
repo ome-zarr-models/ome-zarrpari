@@ -146,6 +146,7 @@ class OMEZarrpariWidget(QWidget):
             for dataset in multiscale.datasets
         ]
         axis_labels = _get_axis_names(multiscale)
+        axis_units = _get_axis_units(multiscale)
         if layer_type == "image":
             channel_axis = _get_channel_axis(multiscale)
             # If there's a channel axis, remove the associated axis label
@@ -158,6 +159,7 @@ class OMEZarrpariWidget(QWidget):
                 visible=visible,
                 axis_labels=axis_labels,
                 channel_axis=channel_axis,
+                units=axis_units,
             )
         elif layer_type == "labels":
             self.viewer.add_labels(
@@ -166,6 +168,7 @@ class OMEZarrpariWidget(QWidget):
                 multiscale=True,
                 visible=visible,
                 axis_labels=axis_labels,
+                units=axis_units,
             )
 
 
@@ -176,12 +179,29 @@ def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
     axis_labels_raw = [axis.name for axis in multiscale.axes]
     if any(label is None for label in axis_labels_raw):
         print(
-            f"Warning: At least one axis label is None for {multiscale.name}, "
+            f"Warning: At least one axis label is None for multiscale '{multiscale.name}', "
             "not setting any axis labels."
         )
         return None
     else:
         return [str(label) for label in axis_labels_raw]
+
+
+def _get_axis_units(multiscale: AnyMultiscale) -> list[str] | None:
+    """
+    Get axis units from Multiscale metadata.
+
+    # TODO: convert strings to pint units if they make sense as physical units
+    """
+    axis_units_raw = [axis.unit for axis in multiscale.axes]
+    if any(unit is None for unit in axis_units_raw):
+        print(
+            f"Warning: At least one unit is None for multiscale '{multiscale.name}', "
+            "not setting any axis units."
+        )
+        return None
+    else:
+        return [str(unit) for unit in axis_units_raw]
 
 
 def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:

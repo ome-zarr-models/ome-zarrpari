@@ -11,3 +11,4 @@ build:
     - uv venv
     - uv pip install .[dev]
     - uv run zensical build --clean
+    - mv site/* $READTHEDOCS_OUTPUT/html/

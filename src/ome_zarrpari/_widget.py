@@ -7,6 +7,8 @@ import zarr
 from ome_zarr_models import open_ome_zarr
 from ome_zarr_models.common.coordinate_transformations import VectorScale
 from qtpy.QtWidgets import (
+    QFileDialog,
+    QHBoxLayout,
     QLineEdit,
     QPushButton,
     QVBoxLayout,
@@ -38,6 +40,10 @@ class OMEZarrpariWidget(QWidget):
         self.text_box = QLineEdit()
         self.text_box.setPlaceholderText("Enter OME-Zarr path or URL...")
 
+        # Browse button
+        self.browse_btn = QPushButton("Browse")
+        self.browse_btn.clicked.connect(self._on_browse)
+
         btn = QPushButton("Load OME-Zarr")
         btn.clicked.connect(self._on_load)
 
@@ -47,7 +53,12 @@ class OMEZarrpariWidget(QWidget):
 
         # Add widgets to vertical layout
         layout = QVBoxLayout()
-        layout.addWidget(self.text_box)
+
+        text_row = QHBoxLayout()
+        text_row.addWidget(self.text_box)
+        text_row.addWidget(self.browse_btn)
+        layout.addLayout(text_row)
+
         layout.addWidget(btn)
         layout.addWidget(self.status_text)
         layout.addStretch()  # Push everything to the top
@@ -60,6 +71,11 @@ class OMEZarrpariWidget(QWidget):
     def _on_load(self) -> None:
         path = self.text_box.text()
         self._load_ome_zarr(path)
+
+    def _on_browse(self) -> None:
+        folder = QFileDialog.getExistingDirectory(self, "Select Folder")
+        if folder:
+            self.text_box.setText(folder)
 
     def _load_ome_zarr(self, path: str, *, visible: bool = True) -> None:
         """

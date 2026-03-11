@@ -33,6 +33,7 @@ dependencies = [
     "qtpy",
     "ome-zarr-models>=1.0",
     "zarr[remote]",
+    # To enable data in Google Cloud services
     "requests",
     "aiohttp",
     "gcsfs"

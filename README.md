@@ -23,26 +23,9 @@ and review the napari docs for plugin developers:
 https://napari.org/stable/plugins/index.html
 -->
 
-## Installation
-
-You can install `ome-zarrpari` via [pip]:
-
-```
-pip install ome-zarrpari
-```
-
-If napari is not already installed, you can install `ome-zarrpari` with napari and Qt via:
-
-```
-pip install "ome-zarrpari[all]"
-```
 
 
-To install latest development version :
 
-```
-pip install git+https://github.com/ome-zarr-models/ome-zarrpari.git
-```
 
 
 

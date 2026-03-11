@@ -10,4 +10,4 @@ build:
     - asdf global uv latest
     - uv venv
     - uv pip install .[dev]
-    - uv zensical build --clean
+    - uv run zensical build --clean

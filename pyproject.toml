@@ -31,7 +31,7 @@ requires-python = ">=3.11,<3.14"
 # See best practices: https://napari.org/stable/plugins/building_a_plugin/best_practices.html
 dependencies = [
     "qtpy",
-    "ome-zarr-models",
+    "ome-zarr-models>=1.0",
     "zarr[remote]",
     "requests",
     "aiohttp",

@@ -84,17 +84,22 @@ class OMEZarrpariWidget(QWidget):
         layout.addWidget(btn)
         layout.addWidget(self.status_text)
 
+        # Divider
         divider = QFrame()
         divider.setFrameShape(QFrame.HLine)
         divider.setFrameShadow(QFrame.Sunken)
         divider.setFixedHeight(1)
         divider.setStyleSheet("background-color: #888888;")
         layout.addWidget(divider)
-        layout.addWidget(QLabel("Coordinate system"))
 
+        # Coordinate system selector
+        layout.addWidget(QLabel("Coordinate system"))
         self.coord_dropdown = QComboBox()
         self.coord_dropdown.addItems(["default"])
         layout.addWidget(self.coord_dropdown)
+        self.viewer.layers.selection.events.changed.connect(
+            self._on_layer_selection_changed
+        )
 
         layout.addStretch()  # Push everything to the top
         self.setLayout(layout)
@@ -111,6 +116,11 @@ class OMEZarrpariWidget(QWidget):
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")
         if folder:
             self.text_box.setText(folder)
+
+    def _on_layer_selection_changed(self) -> None:
+        selected_layers = list(self.viewer.layers.selection)
+        # Do something with selected_layers
+        print(selected_layers)
 
     def _load_ome_zarr(self, path: str, *, visible: bool = True) -> None:
         """

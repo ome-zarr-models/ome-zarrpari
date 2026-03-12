@@ -30,7 +30,8 @@ requires-python = ">=3.11,<3.14"
 # See best practices: https://napari.org/stable/plugins/building_a_plugin/best_practices.html
 dependencies = [
     "qtpy",
-    "ome-zarr-models>=1.0",
+    # This should point to latest commit on the rfc5 branch
+    "ome-zarr-models@git+https://github.com/ome-zarr-models/ome-zarr-models-py@084eccb85fda36920ccdd766b3ddaf39eaa9c8c2",
     "zarr[remote]",
     # To enable data in Google Cloud services
     "requests",

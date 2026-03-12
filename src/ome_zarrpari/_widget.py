@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING, Literal
 
 import napari.layers
+import ome_zarr_models._v06
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
+import ome_zarr_models.v05
 import ome_zarr_models.v05.multiscales
 import zarr
 from ome_zarr_models import open_ome_zarr
@@ -21,8 +23,16 @@ if TYPE_CHECKING:
 
 from qtpy.QtWidgets import QLabel
 
-AnyImage = ome_zarr_models.v04.Image | ome_zarr_models.v05.Image
-AnyImageLabel = ome_zarr_models.v04.ImageLabel | ome_zarr_models.v05.ImageLabel
+AnyImage = (
+    ome_zarr_models.v04.Image
+    | ome_zarr_models.v05.Image
+    | ome_zarr_models._v06.Image
+)
+AnyImageLabel = (
+    ome_zarr_models.v04.ImageLabel
+    | ome_zarr_models.v05.ImageLabel
+    | ome_zarr_models._v06.ImageLabel
+)
 
 SUPPORTED_CLASSES = (AnyImage, AnyImageLabel)
 
@@ -94,13 +104,14 @@ class OMEZarrpariWidget(QWidget):
         self.status_text.setText("Loading OME-Zarr...")
         try:
             group = zarr.open_group(path, mode="r")
-            data = open_ome_zarr(path)
+            data = open_ome_zarr(path, version="0.6")
         except Exception as e:  # noqa: BLE001
             self.status_text.setText(
                 "Loading OME-Zarr failed. See console for more details"
             )
             print(f"Error loading OME-Zarr from {path}:")
             print(f"{type(e).__name__}: {str(e)}")
+            raise
             return
 
         if not isinstance(data, SUPPORTED_CLASSES):
@@ -120,7 +131,11 @@ def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
     """
     Get axis labels from Multiscale metadata.
     """
-    axis_labels_raw = [axis.name for axis in multiscale.axes]
+    if isinstance(multiscale, ome_zarr_models._v06.image.Multiscale):
+        coord_sys = multiscale.intrinsic_coordinate_system
+        axis_labels_raw = [axis.name for axis in coord_sys.axes]
+    else:
+        axis_labels_raw = [axis.name for axis in multiscale.axes]
     if any(label is None for label in axis_labels_raw):
         print(
             f"Warning: At least one axis label is None for multiscale '{multiscale.name}', "
@@ -137,7 +152,11 @@ def _get_axis_units(multiscale: AnyMultiscale) -> list[str] | None:
 
     # TODO: convert strings to pint units if they make sense as physical units
     """
-    axis_units_raw = [axis.unit for axis in multiscale.axes]
+    if isinstance(multiscale, ome_zarr_models._v06.image.Multiscale):
+        coord_sys = multiscale.intrinsic_coordinate_system
+        axis_units_raw = [axis.unit for axis in coord_sys.axes]
+    else:
+        axis_units_raw = [axis.unit for axis in multiscale.axes]
     if any(unit is None for unit in axis_units_raw):
         print(
             f"Warning: At least one unit is None for multiscale '{multiscale.name}', "
@@ -162,7 +181,12 @@ def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:
     """
     Get channel axis from Multiscale metadata.
     """
-    for i, axis in enumerate(multiscale.axes):
+    if isinstance(multiscale, ome_zarr_models._v06.image.Multiscale):
+        coord_sys = multiscale.intrinsic_coordinate_system
+        axes = coord_sys.axes
+    else:
+        axes = multiscale.axes
+    for i, axis in enumerate(axes):
         if axis.type == "channel":
             return i
     return None
@@ -237,9 +261,20 @@ def _load_ome_zarr_image(
             image_label_group = zarr.open_group(
                 zarr_group.store_path / "labels" / path
             )
-            image_labels = ome_zarr_models.v04.ImageLabel.from_zarr(
-                image_label_group
-            )
+            image_labels: AnyImageLabel
+            if isinstance(image, ome_zarr_models.v04.Image):
+                image_labels = ome_zarr_models.v04.ImageLabel.from_zarr(
+                    image_label_group
+                )
+            elif isinstance(image, ome_zarr_models.v05.Image):
+                image_labels = ome_zarr_models.v05.ImageLabel.from_zarr(
+                    image_label_group
+                )
+            elif isinstance(image, ome_zarr_models._v06.Image):
+                image_labels = ome_zarr_models._v06.ImageLabel.from_zarr(
+                    image_label_group
+                )
+
             for multiscale in image_labels.ome_attributes.multiscales:
                 # TODO: correctly assign color from the label metdaata
                 layer = _add_multiscale_layer(

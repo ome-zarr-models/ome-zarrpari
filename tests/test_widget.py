@@ -26,6 +26,8 @@ def test_example_q_widget(make_napari_viewer, capsys):
         == "Loading OME-Zarr failed. See console for more details"
     )
 
+    assert len(widget.added_layers) == 3
+
     # read captured output and check that it's as we expected
     # captured = capsys.readouterr()
     # assert captured.out == "napari has 1 layers\n"

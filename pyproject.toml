@@ -54,6 +54,7 @@ dev = [
     "mypy",
     "ruff",
     "zensical==0.0.26",
+    "mkdocstrings-python==2.0.3",
 ]
 
 [project.entry-points."napari.manifest"]

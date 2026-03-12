@@ -106,95 +106,8 @@ class OMEZarrpariWidget(QWidget):
             )
             return
 
-        self._load_ome_zarr_image(group, data, visible=visible)
+        _load_ome_zarr_image(self.viewer, group, data, visible=visible)
         self.status_text.setText("Successfully loaded")
-
-    def _load_ome_zarr_image(
-        self,
-        zarr_group: zarr.Group,
-        image: ome_zarr_models.v04.Image | ome_zarr_models.v05.Image,
-        *,
-        visible: bool = True,
-    ) -> None:
-        """
-        Load an OME-Zarr image on to the napari viewer.
-        """
-        # Add all the images
-
-        for multiscale in image.ome_attributes.multiscales:
-            self._add_multiscale_layer(
-                multiscale, zarr_group, layer_type="image", visible=visible
-            )
-
-        # Check for labels
-        if (labels := image.labels) is not None:
-            for path in labels.ome_attributes.labels:
-                image_label_group = zarr.open_group(
-                    zarr_group.store_path / "labels" / path
-                )
-                image_labels = ome_zarr_models.v04.ImageLabel.from_zarr(
-                    image_label_group
-                )
-                for multiscale in image_labels.ome_attributes.multiscales:
-                    # TODO: correctly assign color from the label metdaata
-                    self._add_multiscale_layer(
-                        multiscale,
-                        image_label_group,
-                        layer_type="labels",
-                        visible=visible,
-                    )
-
-    def _add_multiscale_layer(
-        self,
-        multiscale: AnyMultiscale,
-        zarr_group: zarr.Group,
-        *,
-        layer_type: Literal["image", "labels"],
-        visible: bool = True,
-    ) -> None:
-        """
-        Add a OME-Zarr multiscales dataset to the napari viewer.
-        """
-        arrays = [
-            zarr.open_array(
-                store=zarr_group.store_path / dataset.path,
-                zarr_format=zarr_group.metadata.zarr_format,
-            )
-            for dataset in multiscale.datasets
-        ]
-        axis_labels = _get_axis_names(multiscale)
-        axis_units = _get_axis_units(multiscale)
-        scale = _get_scale(multiscale)
-        if layer_type == "image":
-            channel_axis = _get_channel_axis(multiscale)
-            # If there's a channel axis, remove the associated label/units/scale
-            if channel_axis is not None:
-                scale.pop(channel_axis)
-                if axis_labels is not None:
-                    axis_labels.pop(channel_axis)
-                if axis_units is not None:
-                    axis_units.pop(channel_axis)
-
-            self.viewer.add_image(
-                arrays,
-                name=multiscale.name,
-                multiscale=True,
-                visible=visible,
-                axis_labels=axis_labels,
-                channel_axis=channel_axis,
-                units=axis_units,
-                scale=scale,
-            )
-        elif layer_type == "labels":
-            self.viewer.add_labels(
-                arrays,
-                name=multiscale.name,
-                multiscale=True,
-                visible=visible,
-                axis_labels=axis_labels,
-                units=axis_units,
-                scale=scale,
-            )
 
 
 def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
@@ -247,3 +160,122 @@ def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:
         if axis.type == "channel":
             return i
     return None
+
+
+def load_ome_zarr(
+    viewer: "napari.Viewer", group: zarr.Group, *, visible: bool = True
+) -> None:
+    """
+    Load an OME-Zarr file into a napari viewer.
+
+    Parameters
+    ----------
+    viewer : napari.Viewer
+        Viewer to add data to.
+    group : zarr.Group
+        Open OME-Zarr group.
+    visible : bool
+        Set visible status of any created napari layers.
+    """
+    data = open_ome_zarr(group)
+
+    if not isinstance(data, SUPPORTED_CLASSES):
+        raise RuntimeError(
+            f"Found {type(data)} - loading not currently supported."
+        )
+
+    _load_ome_zarr_image(viewer, group, data, visible=visible)
+
+
+def _load_ome_zarr_image(
+    viewer: "napari.Viewer",
+    zarr_group: zarr.Group,
+    image: ome_zarr_models.v04.Image | ome_zarr_models.v05.Image,
+    *,
+    visible: bool = True,
+) -> None:
+    """
+    Load an OME-Zarr image on to the napari viewer.
+    """
+    # Add all the images
+
+    for multiscale in image.ome_attributes.multiscales:
+        _add_multiscale_layer(
+            viewer,
+            multiscale,
+            zarr_group,
+            layer_type="image",
+            visible=visible,
+        )
+
+    # Check for labels
+    if (labels := image.labels) is not None:
+        for path in labels.ome_attributes.labels:
+            image_label_group = zarr.open_group(
+                zarr_group.store_path / "labels" / path
+            )
+            image_labels = ome_zarr_models.v04.ImageLabel.from_zarr(
+                image_label_group
+            )
+            for multiscale in image_labels.ome_attributes.multiscales:
+                # TODO: correctly assign color from the label metdaata
+                _add_multiscale_layer(
+                    viewer,
+                    multiscale,
+                    image_label_group,
+                    layer_type="labels",
+                    visible=visible,
+                )
+
+
+def _add_multiscale_layer(
+    viewer: "napari.Viewer",
+    multiscale: AnyMultiscale,
+    zarr_group: zarr.Group,
+    *,
+    layer_type: Literal["image", "labels"],
+    visible: bool = True,
+) -> None:
+    """
+    Add a OME-Zarr multiscales dataset to the napari viewer.
+    """
+    arrays = [
+        zarr.open_array(
+            store=zarr_group.store_path / dataset.path,
+            zarr_format=zarr_group.metadata.zarr_format,
+        )
+        for dataset in multiscale.datasets
+    ]
+    axis_labels = _get_axis_names(multiscale)
+    axis_units = _get_axis_units(multiscale)
+    scale = _get_scale(multiscale)
+    if layer_type == "image":
+        channel_axis = _get_channel_axis(multiscale)
+        # If there's a channel axis, remove the associated label/units/scale
+        if channel_axis is not None:
+            scale.pop(channel_axis)
+            if axis_labels is not None:
+                axis_labels.pop(channel_axis)
+            if axis_units is not None:
+                axis_units.pop(channel_axis)
+
+        viewer.add_image(
+            arrays,
+            name=multiscale.name,
+            multiscale=True,
+            visible=visible,
+            axis_labels=axis_labels,
+            channel_axis=channel_axis,
+            units=axis_units,
+            scale=scale,
+        )
+    elif layer_type == "labels":
+        viewer.add_labels(
+            arrays,
+            name=multiscale.name,
+            multiscale=True,
+            visible=visible,
+            axis_labels=axis_labels,
+            units=axis_units,
+            scale=scale,
+        )

@@ -3,6 +3,6 @@ try:
 except ImportError:
     __version__ = "unknown"
 
-from ._widget import OMEZarrpariWidget
+from ._widget import OMEZarrpariWidget, load_ome_zarr
 
-__all__ = ["OMEZarrpariWidget"]
+__all__ = ["OMEZarrpariWidget", "load_ome_zarr"]

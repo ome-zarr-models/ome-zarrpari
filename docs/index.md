@@ -6,10 +6,26 @@ icon: lucide/rocket
 
 Load and use OME-Zarr 0.4 and 0.5 images and labels in napari, from any data source!
 
-![Screenshot of the ome-zarrpari napari widget](ome-zarrpari-screenshot.png)
-
 Images are loaded into a *napari multiscale image layer*.
 This means higher resolution levels of the data are progressively loaded as you zoom in.
+
+This plugin also: loads label groups; sets axis labels, units, and scales.
+
+## Usage
+This is what the widget looks like:
+
+![Screenshot of the ome-zarrpari napari widget](ome-zarrpari-screenshot.png)
+
+You can either copy/paste a URL or local path into the text box, or press "Browse" to open a file browser and select a local directory.
+Then press the "Load OME-Zarr" button to load the image.
+
+### Programmatic usage
+If you already have a Zarr group you want to add to a napari Viewer, you can use:
+
+::: ome_zarrpari.load_ome_zarr
+    options:
+      heading_level: 4
+
 
 ## Installing
 
@@ -28,6 +44,7 @@ pip install "ome-zarrpari[all]"
     After installing, be sure to enable napari's asyncronous mode.
     Without this browsing data will be very slow.
     You can either go to "Preferences" > "Experimental" to enable it, or set the `ASYNC_NAPARI` environment variable to 1 before launching napari.
+
 
 ## FAQ
 

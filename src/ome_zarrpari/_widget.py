@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Literal
 
 import napari.layers
 import ome_zarr_models._v06
+import ome_zarr_models._v06.base
 import ome_zarr_models._v06.multiscales
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
@@ -49,6 +50,9 @@ AnyAxes = (
     | ome_zarr_models.v05.multiscales.Axes
     | tuple[ome_zarr_models._v06.multiscales.Axis, ...]
 )
+AddedLayers = dict[
+    napari.layers.Image | napari.layers.Labels, AnyImage | AnyImageLabel
+]
 
 
 class OMEZarrpariWidget(QWidget):
@@ -56,7 +60,7 @@ class OMEZarrpariWidget(QWidget):
         super().__init__()
         self.viewer = viewer
         # Keep track of layers added by this widget
-        self.added_layers = {}
+        self.added_layers: AddedLayers = {}
 
         # Create text box and button
         self.text_box = QLineEdit()
@@ -117,10 +121,38 @@ class OMEZarrpariWidget(QWidget):
         if folder:
             self.text_box.setText(folder)
 
+    def _set_coord_systems(self, system_names: list[str]) -> None:
+        self.coord_dropdown.setEnabled(True)
+        self.coord_dropdown.clear()
+        self.coord_dropdown.addItems(system_names)
+
+    def _disable_coord_systems(self):
+        self.coord_dropdown.clear()
+        self.coord_dropdown.setEnabled(False)
+
     def _on_layer_selection_changed(self) -> None:
+        """
+        Update the available coordinate systems when the layer selection changes.
+        """
         selected_layers = list(self.viewer.layers.selection)
-        # Do something with selected_layers
-        print(selected_layers)
+        if len(selected_layers) != 1:
+            self._disable_coord_systems()
+            return
+        if (layer := selected_layers[0]) not in self.added_layers:
+            self._disable_coord_systems()
+            return
+        if not isinstance(
+            model := self.added_layers[layer],
+            ome_zarr_models._v06.image.Image
+            | ome_zarr_models._v06.labels.Labels,
+        ):
+            self._set_coord_systems(["default"])
+            self.coord_dropdown.setEnabled(False)
+            return
+
+        graph = model.transform_graph()
+        system_names = list(graph._systems.keys())
+        self._set_coord_systems(system_names)
 
     def _load_ome_zarr(self, path: str, *, visible: bool = True) -> None:
         """

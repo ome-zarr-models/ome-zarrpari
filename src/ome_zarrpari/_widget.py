@@ -111,7 +111,6 @@ class OMEZarrpariWidget(QWidget):
             )
             print(f"Error loading OME-Zarr from {path}:")
             print(f"{type(e).__name__}: {str(e)}")
-            raise
             return
 
         if not isinstance(data, SUPPORTED_CLASSES):

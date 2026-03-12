@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Literal
 
 import napari.layers
 import ome_zarr_models._v06
+import ome_zarr_models._v06.multiscales
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
 import ome_zarr_models.v05
@@ -39,6 +40,12 @@ SUPPORTED_CLASSES = (AnyImage, AnyImageLabel)
 AnyMultiscale = (
     ome_zarr_models.v04.multiscales.Multiscale
     | ome_zarr_models.v05.multiscales.Multiscale
+    | ome_zarr_models._v06.multiscales.Multiscale
+)
+AnyAxes = (
+    ome_zarr_models.v04.multiscales.Axes
+    | ome_zarr_models.v05.multiscales.Axes
+    | tuple[ome_zarr_models._v06.multiscales.Axis, ...]
 )
 
 
@@ -130,11 +137,8 @@ def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
     """
     Get axis labels from Multiscale metadata.
     """
-    if isinstance(multiscale, ome_zarr_models._v06.image.Multiscale):
-        coord_sys = multiscale.intrinsic_coordinate_system
-        axis_labels_raw = [axis.name for axis in coord_sys.axes]
-    else:
-        axis_labels_raw = [axis.name for axis in multiscale.axes]
+    axes = _get_default_axes(multiscale)
+    axis_labels_raw = [axis.name for axis in axes]
     if any(label is None for label in axis_labels_raw):
         print(
             f"Warning: At least one axis label is None for multiscale '{multiscale.name}', "
@@ -151,11 +155,8 @@ def _get_axis_units(multiscale: AnyMultiscale) -> list[str] | None:
 
     # TODO: convert strings to pint units if they make sense as physical units
     """
-    if isinstance(multiscale, ome_zarr_models._v06.image.Multiscale):
-        coord_sys = multiscale.intrinsic_coordinate_system
-        axis_units_raw = [axis.unit for axis in coord_sys.axes]
-    else:
-        axis_units_raw = [axis.unit for axis in multiscale.axes]
+    axes = _get_default_axes(multiscale)
+    axis_units_raw = [axis.unit for axis in axes]
     if any(unit is None for unit in axis_units_raw):
         print(
             f"Warning: At least one unit is None for multiscale '{multiscale.name}', "
@@ -180,15 +181,18 @@ def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:
     """
     Get channel axis from Multiscale metadata.
     """
-    if isinstance(multiscale, ome_zarr_models._v06.image.Multiscale):
-        coord_sys = multiscale.intrinsic_coordinate_system
-        axes = coord_sys.axes
-    else:
-        axes = multiscale.axes
+    axes = _get_default_axes(multiscale)
     for i, axis in enumerate(axes):
         if axis.type == "channel":
             return i
     return None
+
+
+def _get_default_axes(multiscale: AnyMultiscale) -> AnyAxes:
+    if isinstance(multiscale, ome_zarr_models._v06.image.Multiscale):
+        return multiscale.intrinsic_coordinate_system.axes
+    else:
+        return multiscale.axes
 
 
 def load_ome_zarr(

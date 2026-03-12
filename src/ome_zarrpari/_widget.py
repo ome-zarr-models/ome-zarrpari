@@ -11,7 +11,9 @@ import zarr
 from ome_zarr_models import open_ome_zarr
 from ome_zarr_models.common.coordinate_transformations import VectorScale
 from qtpy.QtWidgets import (
+    QComboBox,
     QFileDialog,
+    QFrame,
     QHBoxLayout,
     QLineEdit,
     QPushButton,
@@ -81,6 +83,19 @@ class OMEZarrpariWidget(QWidget):
 
         layout.addWidget(btn)
         layout.addWidget(self.status_text)
+
+        divider = QFrame()
+        divider.setFrameShape(QFrame.HLine)
+        divider.setFrameShadow(QFrame.Sunken)
+        divider.setFixedHeight(1)
+        divider.setStyleSheet("background-color: #888888;")
+        layout.addWidget(divider)
+        layout.addWidget(QLabel("Coordinate system"))
+
+        self.coord_dropdown = QComboBox()
+        self.coord_dropdown.addItems(["default"])
+        layout.addWidget(self.coord_dropdown)
+
         layout.addStretch()  # Push everything to the top
         self.setLayout(layout)
 

@@ -6,6 +6,8 @@ icon: lucide/rocket
 
 Load and use OME-Zarr 0.4 and 0.5 images and labels in napari, from any data source!
 
+![Screenshot of the ome-zarrpari napari widget](ome-zarrpari-screenshot.png)
+
 Images are loaded into a *napari multiscale image layer*.
 This means higher resolution levels of the data are progressively loaded as you zoom in.
 

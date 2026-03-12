@@ -12,6 +12,9 @@
 A plugin to load and use OME-Zarr data.
 See https://ome-zarrpari.readthedocs.io for the docs.
 
+![Screenshot of the ome-zarrpari napari widget](docs/ome-zarrpari-screenshot.png)
+
+
 ----------------------------------
 <!--
 Don't miss the full getting started guide to set up your new package:

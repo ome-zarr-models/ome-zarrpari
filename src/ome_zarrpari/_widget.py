@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Literal
 
 import napari.layers
+import numpy as np
 import ome_zarr_models._v06
 import ome_zarr_models._v06.base
 import ome_zarr_models._v06.multiscales
@@ -10,6 +11,8 @@ import ome_zarr_models.v05
 import ome_zarr_models.v05.multiscales
 import zarr
 from ome_zarr_models import open_ome_zarr
+from ome_zarr_models._utils import TransformGraphNode
+from ome_zarr_models._v06.coordinate_transforms import AnyTransform, Sequence
 from ome_zarr_models.common.coordinate_transformations import VectorScale
 from qtpy.QtWidgets import (
     QComboBox,
@@ -170,14 +173,43 @@ class OMEZarrpariWidget(QWidget):
         selected_layer = self._get_selected_layer()
         if selected_layer is None:
             return
+        model = self.added_layers[selected_layer]
         if not isinstance(
-            model := self.added_layers[selected_layer],
+            model,
             ome_zarr_models._v06.image.Image
             | ome_zarr_models._v06.labels.Labels,
         ):
             return
         graph = model.transform_graph()
-        print(graph)  # the newly selected option
+        highest_res_path = model.ome_attributes.multiscales[0].datasets[0].path
+        fromsys = TransformGraphNode(name=highest_res_path, path=None)
+        path = graph.find_shortest_path(
+            fromsys,
+            TransformGraphNode(
+                name=self.coord_dropdown.currentText(), path=None
+            ),
+        )
+        if path is None:
+            return
+        transforms: list[AnyTransform] = []
+        currsys = fromsys
+        for p in path[1:]:  # first element is fromsys so we skip it
+            transforms.append(graph._graph[currsys][p])
+            currsys = p
+
+        s = Sequence(transformations=tuple(transforms))
+        # Note: needs padding because napari expects a square matrix
+        affine = np.pad(
+            np.array(s.as_affine().affine_matrix),
+            ((0, 1), (0, 0)),
+        )
+
+        channel_axis = _get_channel_axis(model.ome_attributes.multiscales[0])
+        if channel_axis is not None:
+            affine = np.delete(affine, channel_axis, axis=0)
+            affine = np.delete(affine, channel_axis, axis=1)
+
+        selected_layer.affine = affine
 
     def _load_ome_zarr(self, path: str, *, visible: bool = True) -> None:
         """

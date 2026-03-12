@@ -55,7 +55,7 @@ pip install "ome-zarrpari[all]"
 - `ome-zarrpari` supports OME-Zarr 0.4 and 0.5; `napari-ome-zarr` only supports version 0.4 (as of writing).
 - `ome-zarrpari` explicitly supports all versions of Python supported by `napari`.
 
-### How do I process OME-Zarr data once it's been loaded?
+### How can I process OME-Zarr data once it's been loaded?
 
 Images are loaded into napari multiscale images.
 The list of images in `napari` can be found in the `viewer.layers` list.

@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Literal
 
+import napari.layers
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
 import ome_zarr_models.v05.multiscales
@@ -35,6 +36,8 @@ class OMEZarrpariWidget(QWidget):
     def __init__(self, viewer: "napari.viewer.Viewer"):
         super().__init__()
         self.viewer = viewer
+        # Keep track of layers added by this widget
+        self.added_layers = {}
 
         # Create text box and button
         self.text_box = QLineEdit()
@@ -106,7 +109,10 @@ class OMEZarrpariWidget(QWidget):
             )
             return
 
-        _load_ome_zarr_image(self.viewer, group, data, visible=visible)
+        added_layers = _load_ome_zarr_image(
+            self.viewer, group, data, visible=visible
+        )
+        self.added_layers.update(added_layers)
         self.status_text.setText("Successfully loaded")
 
 
@@ -164,7 +170,9 @@ def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:
 
 def load_ome_zarr(
     viewer: "napari.Viewer", group: zarr.Group, *, visible: bool = True
-) -> None:
+) -> dict[
+    napari.layers.Image | napari.layers.Labels, AnyImage | AnyImageLabel
+]:
     """
     Load an OME-Zarr file into a napari viewer.
 
@@ -176,6 +184,11 @@ def load_ome_zarr(
         Open OME-Zarr group.
     visible : bool
         Set visible status of any created napari layers.
+
+    Returns
+    -------
+    layers :
+        Dictionary mapping the layers added to their original OME-Zarr metadata models.
     """
     data = open_ome_zarr(group)
 
@@ -184,7 +197,7 @@ def load_ome_zarr(
             f"Found {type(data)} - loading not currently supported."
         )
 
-    _load_ome_zarr_image(viewer, group, data, visible=visible)
+    return _load_ome_zarr_image(viewer, group, data, visible=visible)
 
 
 def _load_ome_zarr_image(
@@ -193,22 +206,30 @@ def _load_ome_zarr_image(
     image: AnyImage | AnyImageLabel,
     *,
     visible: bool = True,
-) -> None:
+) -> dict[
+    napari.layers.Image | napari.layers.Labels, AnyImage | AnyImageLabel
+]:
     """
     Load an OME-Zarr image on to the napari viewer.
     """
     layer_type: Literal["image", "labels"] = (
         "image" if isinstance(image, AnyImage) else "labels"
     )
+    added_layers = {}
     # Add all the images
     for multiscale in image.ome_attributes.multiscales:
-        _add_multiscale_layer(
+        layer = _add_multiscale_layer(
             viewer,
             multiscale,
             zarr_group,
             layer_type=layer_type,
             visible=visible,
         )
+        if isinstance(layer, list):
+            for layer_ in layer:
+                added_layers[layer_] = image
+        else:
+            added_layers[layer] = image
 
     # Check for labels
     if isinstance(image, AnyImage) and (labels := image.labels) is not None:
@@ -221,13 +242,16 @@ def _load_ome_zarr_image(
             )
             for multiscale in image_labels.ome_attributes.multiscales:
                 # TODO: correctly assign color from the label metdaata
-                _add_multiscale_layer(
+                layer = _add_multiscale_layer(
                     viewer,
                     multiscale,
                     image_label_group,
                     layer_type="labels",
                     visible=visible,
                 )
+                added_layers[layer] = image_labels
+
+    return added_layers
 
 
 def _add_multiscale_layer(
@@ -237,7 +261,7 @@ def _add_multiscale_layer(
     *,
     layer_type: Literal["image", "labels"],
     visible: bool = True,
-) -> None:
+) -> napari.layers.Image | list[napari.layers.Image] | napari.layers.Labels:
     """
     Add a OME-Zarr multiscales dataset to the napari viewer.
     """
@@ -261,7 +285,7 @@ def _add_multiscale_layer(
             if axis_units is not None:
                 axis_units.pop(channel_axis)
 
-        viewer.add_image(
+        return viewer.add_image(
             arrays,
             name=multiscale.name,
             multiscale=True,
@@ -271,8 +295,8 @@ def _add_multiscale_layer(
             units=axis_units,
             scale=scale,
         )
-    elif layer_type == "labels":
-        viewer.add_labels(
+    else:
+        return viewer.add_labels(
             arrays,
             name=multiscale.name,
             multiscale=True,

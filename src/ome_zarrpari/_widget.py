@@ -99,6 +99,9 @@ class OMEZarrpariWidget(QWidget):
         # Coordinate system selector
         layout.addWidget(QLabel("Coordinate system"))
         self.coord_dropdown = QComboBox()
+        self.coord_dropdown.currentIndexChanged.connect(
+            self._on_coord_system_changed
+        )
         self.coord_dropdown.addItems(["default"])
         layout.addWidget(self.coord_dropdown)
         self.viewer.layers.selection.events.changed.connect(
@@ -130,19 +133,28 @@ class OMEZarrpariWidget(QWidget):
         self.coord_dropdown.clear()
         self.coord_dropdown.setEnabled(False)
 
+    def _get_selected_layer(
+        self,
+    ) -> napari.layers.Image | napari.layers.Labels | None:
+        selected_layers = list(self.viewer.layers.selection)
+        if (
+            len(selected_layers) != 1
+            or (layer := selected_layers[0]) not in self.added_layers
+        ):
+            return None
+
+        return layer
+
     def _on_layer_selection_changed(self) -> None:
         """
         Update the available coordinate systems when the layer selection changes.
         """
-        selected_layers = list(self.viewer.layers.selection)
-        if len(selected_layers) != 1:
-            self._disable_coord_systems()
-            return
-        if (layer := selected_layers[0]) not in self.added_layers:
+        selected_layer = self._get_selected_layer()
+        if selected_layer is None:
             self._disable_coord_systems()
             return
         if not isinstance(
-            model := self.added_layers[layer],
+            model := self.added_layers[selected_layer],
             ome_zarr_models._v06.image.Image
             | ome_zarr_models._v06.labels.Labels,
         ):
@@ -153,6 +165,19 @@ class OMEZarrpariWidget(QWidget):
         graph = model.transform_graph()
         system_names = list(graph._systems.keys())
         self._set_coord_systems(system_names)
+
+    def _on_coord_system_changed(self, index: int) -> None:
+        selected_layer = self._get_selected_layer()
+        if selected_layer is None:
+            return
+        if not isinstance(
+            model := self.added_layers[selected_layer],
+            ome_zarr_models._v06.image.Image
+            | ome_zarr_models._v06.labels.Labels,
+        ):
+            return
+        graph = model.transform_graph()
+        print(graph)  # the newly selected option
 
     def _load_ome_zarr(self, path: str, *, visible: bool = True) -> None:
         """

@@ -9,12 +9,10 @@
 [![npe2](https://img.shields.io/badge/plugin-npe2-blue?link=https://napari.org/stable/plugins/index.html)](https://napari.org/stable/plugins/index.html)
 [![Copier](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/copier-org/copier/master/img/badge/badge-grayscale-inverted-border-purple.json)](https://github.com/copier-org/copier)
 
-A plugin to load and use OME-Zarr data
+A plugin to load and use OME-Zarr data.
+See https://ome-zarrpari.readthedocs.io for the docs.
 
 ----------------------------------
-
-This [napari] plugin was generated with [copier] using the [napari-plugin-template] (None).
-
 <!--
 Don't miss the full getting started guide to set up your new package:
 https://github.com/napari/napari-plugin-template#getting-started
@@ -22,12 +20,6 @@ https://github.com/napari/napari-plugin-template#getting-started
 and review the napari docs for plugin developers:
 https://napari.org/stable/plugins/index.html
 -->
-
-
-
-
-
-
 
 ## Contributing
 
@@ -43,9 +35,6 @@ Distributed under the terms of the [BSD-3] license,
 
 If you encounter any problems, please [file an issue] along with a detailed description.
 
-## Roadmap
-
-1. A widget with a textbox and "load" button to load a single remote OME-Zarr image
 
 [napari]: https://github.com/napari/napari
 [copier]: https://copier.readthedocs.io/en/stable/

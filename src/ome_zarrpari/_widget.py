@@ -20,10 +20,10 @@ if TYPE_CHECKING:
 
 from qtpy.QtWidgets import QLabel
 
-SUPPORTED_CLASSES = (
-    ome_zarr_models.v04.Image,
-    ome_zarr_models.v05.Image,
-)
+AnyImage = ome_zarr_models.v04.Image | ome_zarr_models.v05.Image
+AnyImageLabel = ome_zarr_models.v04.ImageLabel | ome_zarr_models.v05.ImageLabel
+
+SUPPORTED_CLASSES = (AnyImage, AnyImageLabel)
 
 AnyMultiscale = (
     ome_zarr_models.v04.multiscales.Multiscale
@@ -190,26 +190,28 @@ def load_ome_zarr(
 def _load_ome_zarr_image(
     viewer: "napari.Viewer",
     zarr_group: zarr.Group,
-    image: ome_zarr_models.v04.Image | ome_zarr_models.v05.Image,
+    image: AnyImage | AnyImageLabel,
     *,
     visible: bool = True,
 ) -> None:
     """
     Load an OME-Zarr image on to the napari viewer.
     """
+    layer_type: Literal["image", "labels"] = (
+        "image" if isinstance(image, AnyImage) else "labels"
+    )
     # Add all the images
-
     for multiscale in image.ome_attributes.multiscales:
         _add_multiscale_layer(
             viewer,
             multiscale,
             zarr_group,
-            layer_type="image",
+            layer_type=layer_type,
             visible=visible,
         )
 
     # Check for labels
-    if (labels := image.labels) is not None:
+    if isinstance(image, AnyImage) and (labels := image.labels) is not None:
         for path in labels.ome_attributes.labels:
             image_label_group = zarr.open_group(
                 zarr_group.store_path / "labels" / path

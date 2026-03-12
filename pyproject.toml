@@ -31,7 +31,7 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
     "qtpy",
     # This should point to latest commit on the rfc5 branch
-    "ome-zarr-models@git+https://github.com/ome-zarr-models/ome-zarr-models-py@084eccb85fda36920ccdd766b3ddaf39eaa9c8c2",
+    "ome-zarr-models@git+https://github.com/ome-zarr-models/ome-zarr-models-py@3f9f232d8ff619bce6e290096786624611f29220",
     "zarr[remote]",
     # To enable data in Google Cloud services
     "requests",

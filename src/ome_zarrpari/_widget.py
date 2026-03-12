@@ -111,7 +111,7 @@ class OMEZarrpariWidget(QWidget):
         self.status_text.setText("Loading OME-Zarr...")
         try:
             group = zarr.open_group(path, mode="r")
-            data = open_ome_zarr(path, version="0.6")
+            data = open_ome_zarr(path)
         except Exception as e:  # noqa: BLE001
             self.status_text.setText(
                 "Loading OME-Zarr failed. See console for more details"

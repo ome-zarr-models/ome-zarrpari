@@ -1,14 +1,23 @@
 from typing import TYPE_CHECKING, Literal
 
 import napari.layers
+import numpy as np
+import ome_zarr_models._v06
+import ome_zarr_models._v06.base
+import ome_zarr_models._v06.multiscales
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
+import ome_zarr_models.v05
 import ome_zarr_models.v05.multiscales
 import zarr
 from ome_zarr_models import open_ome_zarr
+from ome_zarr_models._utils import TransformGraphNode
+from ome_zarr_models._v06.coordinate_transforms import AnyTransform, Sequence
 from ome_zarr_models.common.coordinate_transformations import VectorScale
 from qtpy.QtWidgets import (
+    QComboBox,
     QFileDialog,
+    QFrame,
     QHBoxLayout,
     QLineEdit,
     QPushButton,
@@ -21,15 +30,32 @@ if TYPE_CHECKING:
 
 from qtpy.QtWidgets import QLabel
 
-AnyImage = ome_zarr_models.v04.Image | ome_zarr_models.v05.Image
-AnyImageLabel = ome_zarr_models.v04.ImageLabel | ome_zarr_models.v05.ImageLabel
+AnyImage = (
+    ome_zarr_models.v04.Image
+    | ome_zarr_models.v05.Image
+    | ome_zarr_models._v06.Image
+)
+AnyImageLabel = (
+    ome_zarr_models.v04.ImageLabel
+    | ome_zarr_models.v05.ImageLabel
+    | ome_zarr_models._v06.ImageLabel
+)
 
-SUPPORTED_CLASSES = (AnyImage, AnyImageLabel)
+SUPPORTED_CLASSES = (AnyImage, AnyImageLabel, ome_zarr_models._v06.Scene)
 
 AnyMultiscale = (
     ome_zarr_models.v04.multiscales.Multiscale
     | ome_zarr_models.v05.multiscales.Multiscale
+    | ome_zarr_models._v06.multiscales.Multiscale
 )
+AnyAxes = (
+    ome_zarr_models.v04.multiscales.Axes
+    | ome_zarr_models.v05.multiscales.Axes
+    | tuple[ome_zarr_models._v06.multiscales.Axis, ...]
+)
+AddedLayers = dict[
+    napari.layers.Image | napari.layers.Labels, AnyImage | AnyImageLabel
+]
 
 
 class OMEZarrpariWidget(QWidget):
@@ -37,7 +63,7 @@ class OMEZarrpariWidget(QWidget):
         super().__init__()
         self.viewer = viewer
         # Keep track of layers added by this widget
-        self.added_layers = {}
+        self.added_layers: AddedLayers = {}
 
         # Create text box and button
         self.text_box = QLineEdit()
@@ -64,6 +90,27 @@ class OMEZarrpariWidget(QWidget):
 
         layout.addWidget(btn)
         layout.addWidget(self.status_text)
+
+        # Divider
+        divider = QFrame()
+        divider.setFrameShape(QFrame.HLine)
+        divider.setFrameShadow(QFrame.Sunken)
+        divider.setFixedHeight(1)
+        divider.setStyleSheet("background-color: #888888;")
+        layout.addWidget(divider)
+
+        # Coordinate system selector
+        layout.addWidget(QLabel("Coordinate system"))
+        self.coord_dropdown = QComboBox()
+        self.coord_dropdown.currentIndexChanged.connect(
+            self._on_coord_system_changed
+        )
+        self.coord_dropdown.addItems(["default"])
+        layout.addWidget(self.coord_dropdown)
+        self.viewer.layers.selection.events.changed.connect(
+            self._on_layer_selection_changed
+        )
+
         layout.addStretch()  # Push everything to the top
         self.setLayout(layout)
 
@@ -79,6 +126,98 @@ class OMEZarrpariWidget(QWidget):
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")
         if folder:
             self.text_box.setText(folder)
+
+    def _set_coord_systems(self, system_names: list[str]) -> None:
+        self.coord_dropdown.setEnabled(True)
+        self.coord_dropdown.clear()
+        self.coord_dropdown.addItems(system_names)
+
+    def _disable_coord_systems(self):
+        self.coord_dropdown.clear()
+        self.coord_dropdown.setEnabled(False)
+
+    def _get_selected_layer(
+        self,
+    ) -> napari.layers.Image | napari.layers.Labels | None:
+        selected_layers = list(self.viewer.layers.selection)
+        if (
+            len(selected_layers) != 1
+            or (layer := selected_layers[0]) not in self.added_layers
+        ):
+            return None
+
+        return layer
+
+    def _on_layer_selection_changed(self) -> None:
+        """
+        Update the available coordinate systems when the layer selection changes.
+        """
+        selected_layer = self._get_selected_layer()
+        self._set_coord_sys_from_layer(selected_layer)
+
+    def _set_coord_sys_from_layer(
+        self, layer: napari.layers.Image | napari.layers.Labels | None
+    ) -> None:
+        """
+        Set available coordinate systems in the combobox from a given layer.
+        """
+        if layer is None:
+            self._disable_coord_systems()
+            return
+        if not isinstance(
+            model := self.added_layers[layer],
+            ome_zarr_models._v06.image.Image
+            | ome_zarr_models._v06.labels.Labels,
+        ):
+            self._set_coord_systems(["default"])
+            self.coord_dropdown.setEnabled(False)
+            return
+
+        graph = model.transform_graph()
+        system_names = list(graph._systems.keys())
+        self._set_coord_systems(system_names)
+
+    def _on_coord_system_changed(self, index: int) -> None:
+        selected_layer = self._get_selected_layer()
+        if selected_layer is None:
+            return
+        model = self.added_layers[selected_layer]
+        if not isinstance(
+            model,
+            ome_zarr_models._v06.image.Image
+            | ome_zarr_models._v06.labels.Labels,
+        ):
+            return
+        graph = model.transform_graph()
+        highest_res_path = model.ome_attributes.multiscales[0].datasets[0].path
+        fromsys = TransformGraphNode(name=highest_res_path, path=None)
+        path = graph.find_shortest_path(
+            fromsys,
+            TransformGraphNode(
+                name=self.coord_dropdown.currentText(), path=None
+            ),
+        )
+        if path is None:
+            return
+        transforms: list[AnyTransform] = []
+        currsys = fromsys
+        for p in path[1:]:  # first element is fromsys so we skip it
+            transforms.append(graph._graph[currsys][p])
+            currsys = p
+
+        s = Sequence(transformations=tuple(transforms))
+        # Note: needs padding because napari expects a square matrix
+        affine = np.pad(
+            np.array(s.as_affine().affine_matrix),
+            ((0, 1), (0, 0)),
+        )
+
+        channel_axis = _get_channel_axis(model.ome_attributes.multiscales[0])
+        if channel_axis is not None:
+            affine = np.delete(affine, channel_axis, axis=0)
+            affine = np.delete(affine, channel_axis, axis=1)
+
+        selected_layer.affine = affine
 
     def _load_ome_zarr(self, path: str, *, visible: bool = True) -> None:
         """
@@ -120,7 +259,8 @@ def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
     """
     Get axis labels from Multiscale metadata.
     """
-    axis_labels_raw = [axis.name for axis in multiscale.axes]
+    axes = _get_default_axes(multiscale)
+    axis_labels_raw = [axis.name for axis in axes]
     if any(label is None for label in axis_labels_raw):
         print(
             f"Warning: At least one axis label is None for multiscale '{multiscale.name}', "
@@ -137,7 +277,8 @@ def _get_axis_units(multiscale: AnyMultiscale) -> list[str] | None:
 
     # TODO: convert strings to pint units if they make sense as physical units
     """
-    axis_units_raw = [axis.unit for axis in multiscale.axes]
+    axes = _get_default_axes(multiscale)
+    axis_units_raw = [axis.unit for axis in axes]
     if any(unit is None for unit in axis_units_raw):
         print(
             f"Warning: At least one unit is None for multiscale '{multiscale.name}', "
@@ -162,10 +303,18 @@ def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:
     """
     Get channel axis from Multiscale metadata.
     """
-    for i, axis in enumerate(multiscale.axes):
+    axes = _get_default_axes(multiscale)
+    for i, axis in enumerate(axes):
         if axis.type == "channel":
             return i
     return None
+
+
+def _get_default_axes(multiscale: AnyMultiscale) -> AnyAxes:
+    if isinstance(multiscale, ome_zarr_models._v06.image.Multiscale):
+        return multiscale.intrinsic_coordinate_system.axes
+    else:
+        return multiscale.axes
 
 
 def load_ome_zarr(
@@ -203,7 +352,7 @@ def load_ome_zarr(
 def _load_ome_zarr_image(
     viewer: "napari.Viewer",
     zarr_group: zarr.Group,
-    image: AnyImage | AnyImageLabel,
+    image: AnyImage | AnyImageLabel | ome_zarr_models._v06.Scene,
     *,
     visible: bool = True,
 ) -> dict[
@@ -212,6 +361,20 @@ def _load_ome_zarr_image(
     """
     Load an OME-Zarr image on to the napari viewer.
     """
+    if isinstance(image, ome_zarr_models._v06.Scene):
+        print("hi!")
+        scene = image
+        all_images = {}
+        for path in scene.images:
+            added_images = _load_ome_zarr_image(
+                viewer,
+                zarr_group[path],
+                scene.images[path],
+                visible=visible,
+            )
+            all_images.update(added_images)
+
+        return all_images
     layer_type: Literal["image", "labels"] = (
         "image" if isinstance(image, AnyImage) else "labels"
     )
@@ -237,9 +400,20 @@ def _load_ome_zarr_image(
             image_label_group = zarr.open_group(
                 zarr_group.store_path / "labels" / path
             )
-            image_labels = ome_zarr_models.v04.ImageLabel.from_zarr(
-                image_label_group
-            )
+            image_labels: AnyImageLabel
+            if isinstance(image, ome_zarr_models.v04.Image):
+                image_labels = ome_zarr_models.v04.ImageLabel.from_zarr(
+                    image_label_group
+                )
+            elif isinstance(image, ome_zarr_models.v05.Image):
+                image_labels = ome_zarr_models.v05.ImageLabel.from_zarr(
+                    image_label_group
+                )
+            elif isinstance(image, ome_zarr_models._v06.Image):
+                image_labels = ome_zarr_models._v06.ImageLabel.from_zarr(
+                    image_label_group
+                )
+
             for multiscale in image_labels.ome_attributes.multiscales:
                 # TODO: correctly assign color from the label metdaata
                 layer = _add_multiscale_layer(
@@ -293,7 +467,10 @@ def _add_multiscale_layer(
             axis_labels=axis_labels,
             channel_axis=channel_axis,
             units=axis_units,
-            scale=scale,
+            affine=np.pad(
+                np.diag(scale),
+                ((0, 1), (0, 1)),
+            ),
         )
     else:
         return viewer.add_labels(
@@ -303,5 +480,8 @@ def _add_multiscale_layer(
             visible=visible,
             axis_labels=axis_labels,
             units=axis_units,
-            scale=scale,
+            affine=np.pad(
+                np.diag(scale),
+                ((0, 1), (0, 1)),
+            ),
         )

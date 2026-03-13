@@ -41,7 +41,7 @@ AnyImageLabel = (
     | ome_zarr_models._v06.ImageLabel
 )
 
-SUPPORTED_CLASSES = (AnyImage, AnyImageLabel)
+SUPPORTED_CLASSES = (AnyImage, AnyImageLabel, ome_zarr_models._v06.Scene)
 
 AnyMultiscale = (
     ome_zarr_models.v04.multiscales.Multiscale
@@ -344,7 +344,7 @@ def load_ome_zarr(
 def _load_ome_zarr_image(
     viewer: "napari.Viewer",
     zarr_group: zarr.Group,
-    image: AnyImage | AnyImageLabel,
+    image: AnyImage | AnyImageLabel | ome_zarr_models._v06.Scene,
     *,
     visible: bool = True,
 ) -> dict[
@@ -353,6 +353,20 @@ def _load_ome_zarr_image(
     """
     Load an OME-Zarr image on to the napari viewer.
     """
+    if isinstance(image, ome_zarr_models._v06.Scene):
+        print("hi!")
+        scene = image
+        all_images = {}
+        for path in scene.images:
+            added_images = _load_ome_zarr_image(
+                viewer,
+                zarr_group[path],
+                scene.images[path],
+                visible=visible,
+            )
+            all_images.update(added_images)
+
+        return all_images
     layer_type: Literal["image", "labels"] = (
         "image" if isinstance(image, AnyImage) else "labels"
     )

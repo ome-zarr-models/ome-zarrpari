@@ -153,11 +153,19 @@ class OMEZarrpariWidget(QWidget):
         Update the available coordinate systems when the layer selection changes.
         """
         selected_layer = self._get_selected_layer()
-        if selected_layer is None:
+        self._set_coord_sys_from_layer(selected_layer)
+
+    def _set_coord_sys_from_layer(
+        self, layer: napari.layers.Image | napari.layers.Labels | None
+    ) -> None:
+        """
+        Set available coordinate systems in the combobox from a given layer.
+        """
+        if layer is None:
             self._disable_coord_systems()
             return
         if not isinstance(
-            model := self.added_layers[selected_layer],
+            model := self.added_layers[layer],
             ome_zarr_models._v06.image.Image
             | ome_zarr_models._v06.labels.Labels,
         ):
@@ -459,7 +467,10 @@ def _add_multiscale_layer(
             axis_labels=axis_labels,
             channel_axis=channel_axis,
             units=axis_units,
-            scale=scale,
+            affine=np.pad(
+                np.diag(scale),
+                ((0, 1), (0, 1)),
+            ),
         )
     else:
         return viewer.add_labels(
@@ -469,5 +480,8 @@ def _add_multiscale_layer(
             visible=visible,
             axis_labels=axis_labels,
             units=axis_units,
-            scale=scale,
+            affine=np.pad(
+                np.diag(scale),
+                ((0, 1), (0, 1)),
+            ),
         )

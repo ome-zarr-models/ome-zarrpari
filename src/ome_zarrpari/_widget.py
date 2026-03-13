@@ -5,6 +5,7 @@ import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
 import ome_zarr_models.v05.multiscales
 import zarr
+from napari.settings import get_settings
 from ome_zarr_models import open_ome_zarr
 from ome_zarr_models.common.coordinate_transformations import VectorScale
 from qtpy.QtWidgets import (
@@ -64,7 +65,18 @@ class OMEZarrpariWidget(QWidget):
 
         layout.addWidget(btn)
         layout.addWidget(self.status_text)
-        layout.addStretch()  # Push everything to the top
+        layout.addStretch(100)  # Push everything to the top
+
+        self.napari_async_button = QPushButton("Enable napari async")
+        self.napari_async_button.clicked.connect(self._enable_napari_async)
+        if self._async_state:
+            self.napari_async_button.setEnabled(False)
+            self.napari_async_button.setText("napari async enabled")
+
+        bottom_row = QHBoxLayout()
+        bottom_row.addWidget(self.napari_async_button)
+        layout.addLayout(bottom_row)
+
         self.setLayout(layout)
 
     @property
@@ -79,6 +91,21 @@ class OMEZarrpariWidget(QWidget):
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")
         if folder:
             self.text_box.setText(folder)
+
+    @property
+    def _async_state(self) -> bool:
+        settings = get_settings()
+        return settings.experimental.async_
+
+    @_async_state.setter
+    def _async_state(self, value: bool) -> None:
+        settings = get_settings()
+        settings.experimental.async_ = value
+
+    def _enable_napari_async(self) -> None:
+        self._async_state = True
+        self.napari_async_button.setEnabled(False)
+        self.napari_async_button.setText("napari async enabled")
 
     def _load_ome_zarr(self, path: str, *, visible: bool = True) -> None:
         """

@@ -62,3 +62,15 @@ The list of images in `napari` can be found in the `viewer.layers` list.
 Each multiscale image in the list has a `image.data` attribute, which stores a list of the multiscale image levels.
 Each item in this list is a `dask.Array`, which wraps a `zarr.Array` under the hood.
 The image at index `i` is downsampled by a factor of `2**i`.
+
+
+## Changelog
+
+**1.0.1**
+
+- Fix loading OME-Zarr 0.5 data that uses a v2 chunk encoding for the arrays.
+- Add an explicit `napari` denpendency.
+
+**1.0.0**
+
+First release

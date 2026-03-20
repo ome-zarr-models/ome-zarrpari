@@ -69,6 +69,8 @@ The image at index `i` is downsampled by a factor of `2**i`.
 **1.0.2**
 
 - Fix loading OME-Zarr 0.5 labels that are associated with an image.
+- Data is now always loaded into a `dask` array, as promised above.
+  This allows it to take advantage of naparis built in data caching.
 
 **1.0.1**
 

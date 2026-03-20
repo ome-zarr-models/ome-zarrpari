@@ -1,8 +1,8 @@
+import dask.array as da
 import pytest
+from napari.layers._multiscale_data import MultiScaleData
 
 from ome_zarrpari._widget import OMEZarrpariWidget
-import dask.array as da
-from napari.layers._multiscale_data import MultiScaleData
 
 
 @pytest.mark.vcr

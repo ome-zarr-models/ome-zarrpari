@@ -1,10 +1,13 @@
 import pytest
 
 from ome_zarrpari._widget import OMEZarrpariWidget
+import dask.array as da
+from napari.layers._multiscale_data import MultiScaleData
 
 
 @pytest.mark.vcr
 def test_example_q_widget(make_napari_viewer, capsys):
+    url = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001247.zarr"
     # make viewer and add an image layer using our fixture
     viewer = make_napari_viewer()
 
@@ -12,11 +15,7 @@ def test_example_q_widget(make_napari_viewer, capsys):
     widget = OMEZarrpariWidget(viewer)
     assert widget.load_pane_status_text == ""
     # Load an image
-    with pytest.warns(UserWarning, match="zarr array cannot be sliced lazily"):
-        widget._load_ome_zarr(
-            "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001247.zarr",
-            visible=False,
-        )
+    widget._load_ome_zarr(url, visible=False)
     assert widget.load_pane_status_text == "Successfully loaded"
 
     # Try a non-existing path
@@ -27,6 +26,10 @@ def test_example_q_widget(make_napari_viewer, capsys):
     )
 
     assert len(widget.added_layers) == 3
+    for layer in viewer.layers:
+        assert isinstance(layer.data, MultiScaleData)
+        for level in layer.data:
+            assert isinstance(level, da.Array)
 
     # read captured output and check that it's as we expected
     # captured = capsys.readouterr()

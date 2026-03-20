@@ -75,7 +75,7 @@ The image at index `i` is downsampled by a factor of `2**i`.
 **1.0.1**
 
 - Fix loading OME-Zarr 0.5 data that uses a v2 chunk encoding for the arrays.
-- Add an explicit `napari` denpendency.
+- Add an explicit `napari` dependency.
 
 **1.0.0**
 

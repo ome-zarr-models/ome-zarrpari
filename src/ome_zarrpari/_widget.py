@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Literal
 
+import dask.array as da
 import napari.layers
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
@@ -301,9 +302,11 @@ def _add_multiscale_layer(
     Add a OME-Zarr multiscales dataset to the napari viewer.
     """
     arrays = [
-        zarr.open_array(
-            store=zarr_group.store_path / dataset.path,
-            zarr_format=zarr_group.metadata.zarr_format,
+        da.from_array(
+            zarr.open_array(
+                store=zarr_group.store_path / dataset.path,
+                zarr_format=zarr_group.metadata.zarr_format,
+            )
         )
         for dataset in multiscale.datasets
     ]

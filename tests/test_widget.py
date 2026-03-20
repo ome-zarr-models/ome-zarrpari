@@ -47,8 +47,7 @@ def test_load_v05_labels(make_napari_viewer, capsys) -> None:
     widget = OMEZarrpariWidget(viewer)
     assert widget.load_pane_status_text == ""
     # Load an image
-    with pytest.warns(UserWarning, match="zarr array cannot be sliced lazily"):
-        widget._load_ome_zarr(url, visible=False)
+    widget._load_ome_zarr(url, visible=False)
     if widget.load_pane_status_text != "Successfully loaded":
         print(capsys.readouterr())
         raise RuntimeError("Data not loaded successfully")

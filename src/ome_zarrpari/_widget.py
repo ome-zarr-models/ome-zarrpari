@@ -2,9 +2,8 @@ from typing import TYPE_CHECKING, Literal
 
 import napari.layers
 import ome_zarr_models.v04
-
-import ome_zarr_models.v05
 import ome_zarr_models.v04.multiscales
+import ome_zarr_models.v05
 import ome_zarr_models.v05.multiscales
 import zarr
 from napari.settings import get_settings

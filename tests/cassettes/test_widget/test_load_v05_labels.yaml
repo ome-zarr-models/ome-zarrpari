@@ -1,0 +1,1511 @@
+interactions:
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/.zgroup
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001ebc6fa-0069bd5b67-1b48f1f14-default</RequestId><HostId>1b48f1f14-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc6fa-0069bd5b67-1b48f1f14-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/zarr.json
+  response:
+    body:
+      string: '{"attributes": {"ome": {"version": "0.5", "_creator": {"name": "omero-zarr"},
+        "multiscales": [{"axes": [{"name": "c", "type": "channel"}, {"name": "z",
+        "type": "space", "unit": "micrometer"}, {"name": "y", "type": "space", "unit":
+        "micrometer"}, {"name": "x", "type": "space", "unit": "micrometer"}], "datasets":
+        [{"coordinateTransformations": [{"scale": [1.0, 0.5002025531914894, 0.3603981534640209,
+        0.3603981534640209], "type": "scale"}], "path": "0"}, {"coordinateTransformations":
+        [{"scale": [1.0, 0.5002025531914894, 0.7207963069280418, 0.7207963069280418],
+        "type": "scale"}], "path": "1"}, {"coordinateTransformations": [{"scale":
+        [1.0, 0.5002025531914894, 1.4415926138560835, 1.4415926138560835], "type":
+        "scale"}], "path": "2"}]}], "omero": {"channels": [{"active": true, "coefficient":
+        1.0, "color": "0000FF", "family": "linear", "inverted": false, "label": "LaminB1",
+        "window": {"end": 1500.0, "max": 65535.0, "min": 0.0, "start": 0.0}}, {"active":
+        true, "coefficient": 1.0, "color": "FFFF00", "family": "linear", "inverted":
+        false, "label": "Dapi", "window": {"end": 1500.0, "max": 65535.0, "min": 0.0,
+        "start": 0.0}}], "id": 1, "rdefs": {"defaultT": 0, "defaultZ": 118, "model":
+        "color"}}}}, "zarr_format": 3, "node_type": "group"}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '1243'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"064277cec351dc92f5810aa7eb580e69"'
+      Last-Modified:
+      - Thu, 21 Nov 2024 23:36:58 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc6fb-0069bd5b67-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/.zattrs
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001f00f8c-0069bd5b67-1b57d0792-default</RequestId><HostId>1b57d0792-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      x-amz-request-id:
+      - tx000000000000001f00f8c-0069bd5b67-1b57d0792-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/.zmetadata
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001f00f8d-0069bd5b67-1b57d0792-default</RequestId><HostId>1b57d0792-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      x-amz-request-id:
+      - tx000000000000001f00f8d-0069bd5b67-1b57d0792-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/.zattrs
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001f00f8f-0069bd5b67-1b57d0792-default</RequestId><HostId>1b57d0792-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      x-amz-request-id:
+      - tx000000000000001f00f8f-0069bd5b67-1b57d0792-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/.zgroup
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001ebc6ff-0069bd5b67-1b48f1f14-default</RequestId><HostId>1b48f1f14-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc6ff-0069bd5b67-1b48f1f14-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/zarr.json
+  response:
+    body:
+      string: '{"attributes": {"ome": {"version": "0.5", "_creator": {"name": "omero-zarr"},
+        "multiscales": [{"axes": [{"name": "c", "type": "channel"}, {"name": "z",
+        "type": "space", "unit": "micrometer"}, {"name": "y", "type": "space", "unit":
+        "micrometer"}, {"name": "x", "type": "space", "unit": "micrometer"}], "datasets":
+        [{"coordinateTransformations": [{"scale": [1.0, 0.5002025531914894, 0.3603981534640209,
+        0.3603981534640209], "type": "scale"}], "path": "0"}, {"coordinateTransformations":
+        [{"scale": [1.0, 0.5002025531914894, 0.7207963069280418, 0.7207963069280418],
+        "type": "scale"}], "path": "1"}, {"coordinateTransformations": [{"scale":
+        [1.0, 0.5002025531914894, 1.4415926138560835, 1.4415926138560835], "type":
+        "scale"}], "path": "2"}]}], "omero": {"channels": [{"active": true, "coefficient":
+        1.0, "color": "0000FF", "family": "linear", "inverted": false, "label": "LaminB1",
+        "window": {"end": 1500.0, "max": 65535.0, "min": 0.0, "start": 0.0}}, {"active":
+        true, "coefficient": 1.0, "color": "FFFF00", "family": "linear", "inverted":
+        false, "label": "Dapi", "window": {"end": 1500.0, "max": 65535.0, "min": 0.0,
+        "start": 0.0}}], "id": 1, "rdefs": {"defaultT": 0, "defaultZ": 118, "model":
+        "color"}}}}, "zarr_format": 3, "node_type": "group"}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '1243'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"064277cec351dc92f5810aa7eb580e69"'
+      Last-Modified:
+      - Thu, 21 Nov 2024 23:36:58 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc6fe-0069bd5b67-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/.zmetadata
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001f00f90-0069bd5b67-1b57d0792-default</RequestId><HostId>1b57d0792-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      x-amz-request-id:
+      - tx000000000000001f00f90-0069bd5b67-1b57d0792-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/0/zarr.json
+  response:
+    body:
+      string: '{"chunk_grid":{"configuration":{"chunk_shape":[1,10,512,512]},"name":"regular"},"chunk_key_encoding":{"name":"default"},"codecs":[{"configuration":{"chunk_shape":[1,1,256,256],"codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"configuration":{"blocksize":0,"clevel":5,"cname":"zstd","shuffle":"shuffle","typesize":2},"name":"blosc"}],"index_codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"name":"crc32c"}]},"name":"sharding_indexed"}],"data_type":"uint16","dimension_names":["c","z","y","x"],"fill_value":0,"node_type":"array","shape":[2,236,275,271],"zarr_format":3}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '597'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"0cdba3e818cd5355bd8be263546026bb"'
+      Last-Modified:
+      - Thu, 21 Nov 2024 23:36:57 GMT
+      x-amz-request-id:
+      - tx000000000000001f00f92-0069bd5b67-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/1/zarr.json
+  response:
+    body:
+      string: '{"chunk_grid":{"configuration":{"chunk_shape":[1,10,512,512]},"name":"regular"},"chunk_key_encoding":{"name":"default"},"codecs":[{"configuration":{"chunk_shape":[1,1,256,256],"codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"configuration":{"blocksize":0,"clevel":5,"cname":"zstd","shuffle":"shuffle","typesize":2},"name":"blosc"}],"index_codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"name":"crc32c"}]},"name":"sharding_indexed"}],"data_type":"uint16","dimension_names":["c","z","y","x"],"fill_value":0,"node_type":"array","shape":[2,236,137,135],"zarr_format":3}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '597'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"87152598ad211c5d02e71890510a5e9f"'
+      Last-Modified:
+      - Thu, 21 Nov 2024 23:36:58 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc709-0069bd5b67-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/2/zarr.json
+  response:
+    body:
+      string: '{"chunk_grid":{"configuration":{"chunk_shape":[1,10,512,512]},"name":"regular"},"chunk_key_encoding":{"name":"default"},"codecs":[{"configuration":{"chunk_shape":[1,1,256,256],"codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"configuration":{"blocksize":0,"clevel":5,"cname":"zstd","shuffle":"shuffle","typesize":2},"name":"blosc"}],"index_codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"name":"crc32c"}]},"name":"sharding_indexed"}],"data_type":"uint16","dimension_names":["c","z","y","x"],"fill_value":0,"node_type":"array","shape":[2,236,68,67],"zarr_format":3}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '595'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"9d0f2057e744636e104b47f37015540d"'
+      Last-Modified:
+      - Thu, 21 Nov 2024 23:36:58 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc70a-0069bd5b67-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/zarr.json
+  response:
+    body:
+      string: "{\n  \"attributes\": {\n    \"ome\": {\n      \"version\": \"0.5\",\n
+        \     \"labels\": [\n        \"0\"\n      ]\n    }\n  },\n  \"zarr_format\":
+        3,\n  \"consolidated_metadata\": null,\n  \"node_type\": \"group\"\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '183'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"d5d2df4150e8a930269c58187f549488"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 14:12:24 GMT
+      x-amz-request-id:
+      - tx000000000000001f00f9e-0069bd5b67-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/zarr.json
+  response:
+    body:
+      string: "{\n  \"attributes\": {\n    \"ome\": {\n      \"version\": \"0.5\",\n
+        \     \"labels\": [\n        \"0\"\n      ]\n    }\n  },\n  \"zarr_format\":
+        3,\n  \"consolidated_metadata\": null,\n  \"node_type\": \"group\"\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '183'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"d5d2df4150e8a930269c58187f549488"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 14:12:24 GMT
+      x-amz-request-id:
+      - tx000000000000001f00f9f-0069bd5b67-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/zarr.json
+  response:
+    body:
+      string: "{\n  \"attributes\": {\n    \"ome\": {\n      \"version\": \"0.5\",\n
+        \     \"multiscales\": [\n        {\n          \"datasets\": [\n            {\n
+        \             \"path\": \"0\",\n              \"coordinateTransformations\":
+        [\n                {\n                  \"type\": \"scale\",\n                  \"scale\":
+        [\n                    1.0,\n                    0.5002025531914894,\n                    0.3603981534640209,\n
+        \                   0.3603981534640209\n                  ]\n                }\n
+        \             ]\n            },\n            {\n              \"path\": \"1\",\n
+        \             \"coordinateTransformations\": [\n                {\n                  \"type\":
+        \"scale\",\n                  \"scale\": [\n                    1.0,\n                    0.5002025531914894,\n
+        \                   0.7207963069280418,\n                    0.7207963069280418\n
+        \                 ]\n                }\n              ]\n            },\n
+        \           {\n              \"path\": \"2\",\n              \"coordinateTransformations\":
+        [\n                {\n                  \"type\": \"scale\",\n                  \"scale\":
+        [\n                    1.0,\n                    0.5002025531914894,\n                    1.4415926138560835,\n
+        \                   1.4415926138560835\n                  ]\n                }\n
+        \             ]\n            }\n          ],\n          \"name\": \"0\",\n
+        \         \"axes\": [\n            {\n              \"name\": \"c\",\n              \"type\":
+        \"channel\"\n            },\n            {\n              \"name\": \"z\",\n
+        \             \"type\": \"space\",\n              \"unit\": \"micrometer\"\n
+        \           },\n            {\n              \"name\": \"y\",\n              \"type\":
+        \"space\",\n              \"unit\": \"micrometer\"\n            },\n            {\n
+        \             \"name\": \"x\",\n              \"type\": \"space\",\n              \"unit\":
+        \"micrometer\"\n            }\n          ]\n        }\n      ],\n      \"image-label\":
+        {\n        \"source\": {\n          \"image\": \"../..\"\n        },\n        \"colors\":
+        [\n          {\n            \"label-value\": 1,\n            \"rgba\": [\n
+        \             128,\n              128,\n              128,\n              128\n
+        \           ]\n          },\n          {\n            \"label-value\": 2,\n
+        \           \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        3,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        4,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        5,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        6,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        7,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        8,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        9,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        10,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        11,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        12,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        13,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        14,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        15,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        16,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        17,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        18,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        19,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        20,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        21,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        22,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        23,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        24,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        25,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        26,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        27,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        28,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        29,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        30,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        31,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        32,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        33,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        34,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        35,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        36,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        37,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        38,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        39,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        40,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        41,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        42,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        43,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        44,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        45,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        46,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        47,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        48,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        49,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        50,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        51,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        52,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        53,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        54,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        55,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        56,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        57,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        58,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        59,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        60,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        61,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          }\n        ],\n        \"properties\":
+        [\n          {\n            \"label-value\": 1,\n            \"omero:shapeId\":
+        1664569,\n            \"omero:roiId\": 1380887\n          },\n          {\n
+        \           \"label-value\": 2,\n            \"omero:shapeId\": 1664617,\n
+        \           \"omero:roiId\": 1380888\n          },\n          {\n            \"label-value\":
+        3,\n            \"omero:shapeId\": 1664664,\n            \"omero:roiId\":
+        1380889\n          },\n          {\n            \"label-value\": 4,\n            \"omero:shapeId\":
+        1664709,\n            \"omero:roiId\": 1380890\n          },\n          {\n
+        \           \"label-value\": 5,\n            \"omero:shapeId\": 1664749,\n
+        \           \"omero:roiId\": 1380891\n          },\n          {\n            \"label-value\":
+        6,\n            \"omero:shapeId\": 1664787,\n            \"omero:roiId\":
+        1380892\n          },\n          {\n            \"label-value\": 7,\n            \"omero:shapeId\":
+        1664826,\n            \"omero:roiId\": 1380893\n          },\n          {\n
+        \           \"label-value\": 8,\n            \"omero:shapeId\": 1664859,\n
+        \           \"omero:roiId\": 1380894\n          },\n          {\n            \"label-value\":
+        9,\n            \"omero:shapeId\": 1664898,\n            \"omero:roiId\":
+        1380895\n          },\n          {\n            \"label-value\": 10,\n            \"omero:shapeId\":
+        1664932,\n            \"omero:roiId\": 1380896\n          },\n          {\n
+        \           \"label-value\": 11,\n            \"omero:shapeId\": 1664967,\n
+        \           \"omero:roiId\": 1380897\n          },\n          {\n            \"label-value\":
+        12,\n            \"omero:shapeId\": 1665000,\n            \"omero:roiId\":
+        1380898\n          },\n          {\n            \"label-value\": 13,\n            \"omero:shapeId\":
+        1665036,\n            \"omero:roiId\": 1380899\n          },\n          {\n
+        \           \"label-value\": 14,\n            \"omero:shapeId\": 1665078,\n
+        \           \"omero:roiId\": 1380900\n          },\n          {\n            \"label-value\":
+        15,\n            \"omero:shapeId\": 1665118,\n            \"omero:roiId\":
+        1380901\n          },\n          {\n            \"label-value\": 16,\n            \"omero:shapeId\":
+        1665156,\n            \"omero:roiId\": 1380902\n          },\n          {\n
+        \           \"label-value\": 17,\n            \"omero:shapeId\": 1665200,\n
+        \           \"omero:roiId\": 1380903\n          },\n          {\n            \"label-value\":
+        18,\n            \"omero:shapeId\": 1665238,\n            \"omero:roiId\":
+        1380904\n          },\n          {\n            \"label-value\": 19,\n            \"omero:shapeId\":
+        1665283,\n            \"omero:roiId\": 1380905\n          },\n          {\n
+        \           \"label-value\": 20,\n            \"omero:shapeId\": 1665319,\n
+        \           \"omero:roiId\": 1380906\n          },\n          {\n            \"label-value\":
+        21,\n            \"omero:shapeId\": 1665356,\n            \"omero:roiId\":
+        1380907\n          },\n          {\n            \"label-value\": 22,\n            \"omero:shapeId\":
+        1665396,\n            \"omero:roiId\": 1380908\n          },\n          {\n
+        \           \"label-value\": 23,\n            \"omero:shapeId\": 1665428,\n
+        \           \"omero:roiId\": 1380909\n          },\n          {\n            \"label-value\":
+        24,\n            \"omero:shapeId\": 1665467,\n            \"omero:roiId\":
+        1380910\n          },\n          {\n            \"label-value\": 25,\n            \"omero:shapeId\":
+        1665513,\n            \"omero:roiId\": 1380911\n          },\n          {\n
+        \           \"label-value\": 26,\n            \"omero:shapeId\": 1665541,\n
+        \           \"omero:roiId\": 1380912\n          },\n          {\n            \"label-value\":
+        27,\n            \"omero:shapeId\": 1665575,\n            \"omero:roiId\":
+        1380913\n          },\n          {\n            \"label-value\": 28,\n            \"omero:shapeId\":
+        1665611,\n            \"omero:roiId\": 1380914\n          },\n          {\n
+        \           \"label-value\": 29,\n            \"omero:shapeId\": 1665662,\n
+        \           \"omero:roiId\": 1380915\n          },\n          {\n            \"label-value\":
+        30,\n            \"omero:shapeId\": 1665709,\n            \"omero:roiId\":
+        1380916\n          },\n          {\n            \"label-value\": 31,\n            \"omero:shapeId\":
+        1665743,\n            \"omero:roiId\": 1380917\n          },\n          {\n
+        \           \"label-value\": 32,\n            \"omero:shapeId\": 1665777,\n
+        \           \"omero:roiId\": 1380918\n          },\n          {\n            \"label-value\":
+        33,\n            \"omero:shapeId\": 1665808,\n            \"omero:roiId\":
+        1380919\n          },\n          {\n            \"label-value\": 34,\n            \"omero:shapeId\":
+        1665853,\n            \"omero:roiId\": 1380920\n          },\n          {\n
+        \           \"label-value\": 35,\n            \"omero:shapeId\": 1665891,\n
+        \           \"omero:roiId\": 1380921\n          },\n          {\n            \"label-value\":
+        36,\n            \"omero:shapeId\": 1665935,\n            \"omero:roiId\":
+        1380922\n          },\n          {\n            \"label-value\": 37,\n            \"omero:shapeId\":
+        1665970,\n            \"omero:roiId\": 1380923\n          },\n          {\n
+        \           \"label-value\": 38,\n            \"omero:shapeId\": 1666013,\n
+        \           \"omero:roiId\": 1380924\n          },\n          {\n            \"label-value\":
+        39,\n            \"omero:shapeId\": 1666052,\n            \"omero:roiId\":
+        1380925\n          },\n          {\n            \"label-value\": 40,\n            \"omero:shapeId\":
+        1666085,\n            \"omero:roiId\": 1380926\n          },\n          {\n
+        \           \"label-value\": 41,\n            \"omero:shapeId\": 1666118,\n
+        \           \"omero:roiId\": 1380927\n          },\n          {\n            \"label-value\":
+        42,\n            \"omero:shapeId\": 1666158,\n            \"omero:roiId\":
+        1380928\n          },\n          {\n            \"label-value\": 43,\n            \"omero:shapeId\":
+        1666194,\n            \"omero:roiId\": 1380929\n          },\n          {\n
+        \           \"label-value\": 44,\n            \"omero:shapeId\": 1666235,\n
+        \           \"omero:roiId\": 1380930\n          },\n          {\n            \"label-value\":
+        45,\n            \"omero:shapeId\": 1666268,\n            \"omero:roiId\":
+        1380931\n          },\n          {\n            \"label-value\": 46,\n            \"omero:shapeId\":
+        1666307,\n            \"omero:roiId\": 1380932\n          },\n          {\n
+        \           \"label-value\": 47,\n            \"omero:shapeId\": 1666338,\n
+        \           \"omero:roiId\": 1380933\n          },\n          {\n            \"label-value\":
+        48,\n            \"omero:shapeId\": 1666378,\n            \"omero:roiId\":
+        1380934\n          },\n          {\n            \"label-value\": 49,\n            \"omero:shapeId\":
+        1666411,\n            \"omero:roiId\": 1380935\n          },\n          {\n
+        \           \"label-value\": 50,\n            \"omero:shapeId\": 1666446,\n
+        \           \"omero:roiId\": 1380936\n          },\n          {\n            \"label-value\":
+        51,\n            \"omero:shapeId\": 1666481,\n            \"omero:roiId\":
+        1380937\n          },\n          {\n            \"label-value\": 52,\n            \"omero:shapeId\":
+        1666518,\n            \"omero:roiId\": 1380938\n          },\n          {\n
+        \           \"label-value\": 53,\n            \"omero:shapeId\": 1666558,\n
+        \           \"omero:roiId\": 1380939\n          },\n          {\n            \"label-value\":
+        54,\n            \"omero:shapeId\": 1666596,\n            \"omero:roiId\":
+        1380940\n          },\n          {\n            \"label-value\": 55,\n            \"omero:shapeId\":
+        1666671,\n            \"omero:roiId\": 1380941\n          },\n          {\n
+        \           \"label-value\": 56,\n            \"omero:shapeId\": 1666711,\n
+        \           \"omero:roiId\": 1380942\n          },\n          {\n            \"label-value\":
+        57,\n            \"omero:shapeId\": 1666746,\n            \"omero:roiId\":
+        1380943\n          },\n          {\n            \"label-value\": 58,\n            \"omero:shapeId\":
+        1666789,\n            \"omero:roiId\": 1380944\n          },\n          {\n
+        \           \"label-value\": 59,\n            \"omero:shapeId\": 1666826,\n
+        \           \"omero:roiId\": 1380945\n          },\n          {\n            \"label-value\":
+        60,\n            \"omero:shapeId\": 1666846,\n            \"omero:roiId\":
+        1380946\n          },\n          {\n            \"label-value\": 61,\n            \"omero:shapeId\":
+        1666891,\n            \"omero:roiId\": 1380947\n          }\n        ]\n      }\n
+        \   }\n  },\n  \"zarr_format\": 3,\n  \"consolidated_metadata\": null,\n  \"node_type\":
+        \"group\"\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '20074'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"31f7d9fbfad90e7b66e3b6b4a1315839"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:07 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc711-0069bd5b67-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/0/zarr.json
+  response:
+    body:
+      string: "{\n  \"shape\": [\n    1,\n    236,\n    275,\n    271\n  ],\n  \"data_type\":
+        \"int8\",\n  \"chunk_grid\": {\n    \"name\": \"regular\",\n    \"configuration\":
+        {\n      \"chunk_shape\": [\n        1,\n        59,\n        69,\n        136\n
+        \     ]\n    }\n  },\n  \"chunk_key_encoding\": {\n    \"name\": \"default\",\n
+        \   \"configuration\": {\n      \"separator\": \"/\"\n    }\n  },\n  \"fill_value\":
+        0,\n  \"codecs\": [\n    {\n      \"name\": \"bytes\"\n    },\n    {\n      \"name\":
+        \"zstd\",\n      \"configuration\": {\n        \"level\": 0,\n        \"checksum\":
+        false\n      }\n    }\n  ],\n  \"attributes\": {},\n  \"dimension_names\":
+        [\n    \"c\",\n    \"z\",\n    \"y\",\n    \"x\"\n  ],\n  \"zarr_format\":
+        3,\n  \"node_type\": \"array\",\n  \"storage_transformers\": []\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '678'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"fcc86fe5f8cb86b38b318fc32c077329"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:06 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc712-0069bd5b67-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/1/zarr.json
+  response:
+    body:
+      string: "{\n  \"shape\": [\n    1,\n    236,\n    137,\n    135\n  ],\n  \"data_type\":
+        \"int8\",\n  \"chunk_grid\": {\n    \"name\": \"regular\",\n    \"configuration\":
+        {\n      \"chunk_shape\": [\n        1,\n        118,\n        69,\n        68\n
+        \     ]\n    }\n  },\n  \"chunk_key_encoding\": {\n    \"name\": \"default\",\n
+        \   \"configuration\": {\n      \"separator\": \"/\"\n    }\n  },\n  \"fill_value\":
+        0,\n  \"codecs\": [\n    {\n      \"name\": \"bytes\"\n    },\n    {\n      \"name\":
+        \"zstd\",\n      \"configuration\": {\n        \"level\": 0,\n        \"checksum\":
+        false\n      }\n    }\n  ],\n  \"attributes\": {},\n  \"dimension_names\":
+        [\n    \"c\",\n    \"z\",\n    \"y\",\n    \"x\"\n  ],\n  \"zarr_format\":
+        3,\n  \"node_type\": \"array\",\n  \"storage_transformers\": []\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '678'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"234279d60e772afd419518ec36012b52"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:06 GMT
+      x-amz-request-id:
+      - tx000000000000001f00fa7-0069bd5b67-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/2/zarr.json
+  response:
+    body:
+      string: "{\n  \"shape\": [\n    1,\n    236,\n    68,\n    67\n  ],\n  \"data_type\":
+        \"int8\",\n  \"chunk_grid\": {\n    \"name\": \"regular\",\n    \"configuration\":
+        {\n      \"chunk_shape\": [\n        1,\n        118,\n        34,\n        67\n
+        \     ]\n    }\n  },\n  \"chunk_key_encoding\": {\n    \"name\": \"default\",\n
+        \   \"configuration\": {\n      \"separator\": \"/\"\n    }\n  },\n  \"fill_value\":
+        0,\n  \"codecs\": [\n    {\n      \"name\": \"bytes\"\n    },\n    {\n      \"name\":
+        \"zstd\",\n      \"configuration\": {\n        \"level\": 0,\n        \"checksum\":
+        false\n      }\n    }\n  ],\n  \"attributes\": {},\n  \"dimension_names\":
+        [\n    \"c\",\n    \"z\",\n    \"y\",\n    \"x\"\n  ],\n  \"zarr_format\":
+        3,\n  \"node_type\": \"array\",\n  \"storage_transformers\": []\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '676'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"9e6a60c24bb38d771a5de9a33d2b4bfe"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:06 GMT
+      x-amz-request-id:
+      - tx000000000000001f00fa8-0069bd5b67-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/labels/zarr.json
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001ebc715-0069bd5b67-1b48f1f14-default</RequestId><HostId>1b48f1f14-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc715-0069bd5b67-1b48f1f14-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/0/zarr.json
+  response:
+    body:
+      string: '{"chunk_grid":{"configuration":{"chunk_shape":[1,10,512,512]},"name":"regular"},"chunk_key_encoding":{"name":"default"},"codecs":[{"configuration":{"chunk_shape":[1,1,256,256],"codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"configuration":{"blocksize":0,"clevel":5,"cname":"zstd","shuffle":"shuffle","typesize":2},"name":"blosc"}],"index_codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"name":"crc32c"}]},"name":"sharding_indexed"}],"data_type":"uint16","dimension_names":["c","z","y","x"],"fill_value":0,"node_type":"array","shape":[2,236,275,271],"zarr_format":3}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '597'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"0cdba3e818cd5355bd8be263546026bb"'
+      Last-Modified:
+      - Thu, 21 Nov 2024 23:36:57 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc717-0069bd5b67-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/1/zarr.json
+  response:
+    body:
+      string: '{"chunk_grid":{"configuration":{"chunk_shape":[1,10,512,512]},"name":"regular"},"chunk_key_encoding":{"name":"default"},"codecs":[{"configuration":{"chunk_shape":[1,1,256,256],"codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"configuration":{"blocksize":0,"clevel":5,"cname":"zstd","shuffle":"shuffle","typesize":2},"name":"blosc"}],"index_codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"name":"crc32c"}]},"name":"sharding_indexed"}],"data_type":"uint16","dimension_names":["c","z","y","x"],"fill_value":0,"node_type":"array","shape":[2,236,137,135],"zarr_format":3}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '597'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"87152598ad211c5d02e71890510a5e9f"'
+      Last-Modified:
+      - Thu, 21 Nov 2024 23:36:58 GMT
+      x-amz-request-id:
+      - tx000000000000001f00fa9-0069bd5b67-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/2/zarr.json
+  response:
+    body:
+      string: '{"chunk_grid":{"configuration":{"chunk_shape":[1,10,512,512]},"name":"regular"},"chunk_key_encoding":{"name":"default"},"codecs":[{"configuration":{"chunk_shape":[1,1,256,256],"codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"configuration":{"blocksize":0,"clevel":5,"cname":"zstd","shuffle":"shuffle","typesize":2},"name":"blosc"}],"index_codecs":[{"configuration":{"endian":"little"},"name":"bytes"},{"name":"crc32c"}]},"name":"sharding_indexed"}],"data_type":"uint16","dimension_names":["c","z","y","x"],"fill_value":0,"node_type":"array","shape":[2,236,68,67],"zarr_format":3}'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '595'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:23 GMT
+      Etag:
+      - '"9d0f2057e744636e104b47f37015540d"'
+      Last-Modified:
+      - Thu, 21 Nov 2024 23:36:58 GMT
+      x-amz-request-id:
+      - tx000000000000001f00faa-0069bd5b67-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/.zattrs
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001f00fcc-0069bd5b68-1b57d0792-default</RequestId><HostId>1b57d0792-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      x-amz-request-id:
+      - tx000000000000001f00fcc-0069bd5b68-1b57d0792-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/.zmetadata
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001f00fcd-0069bd5b68-1b57d0792-default</RequestId><HostId>1b57d0792-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      x-amz-request-id:
+      - tx000000000000001f00fcd-0069bd5b68-1b57d0792-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/.zgroup
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001ebc74d-0069bd5b68-1b48f1f14-default</RequestId><HostId>1b48f1f14-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc74d-0069bd5b68-1b48f1f14-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/zarr.json
+  response:
+    body:
+      string: "{\n  \"attributes\": {\n    \"ome\": {\n      \"version\": \"0.5\",\n
+        \     \"multiscales\": [\n        {\n          \"datasets\": [\n            {\n
+        \             \"path\": \"0\",\n              \"coordinateTransformations\":
+        [\n                {\n                  \"type\": \"scale\",\n                  \"scale\":
+        [\n                    1.0,\n                    0.5002025531914894,\n                    0.3603981534640209,\n
+        \                   0.3603981534640209\n                  ]\n                }\n
+        \             ]\n            },\n            {\n              \"path\": \"1\",\n
+        \             \"coordinateTransformations\": [\n                {\n                  \"type\":
+        \"scale\",\n                  \"scale\": [\n                    1.0,\n                    0.5002025531914894,\n
+        \                   0.7207963069280418,\n                    0.7207963069280418\n
+        \                 ]\n                }\n              ]\n            },\n
+        \           {\n              \"path\": \"2\",\n              \"coordinateTransformations\":
+        [\n                {\n                  \"type\": \"scale\",\n                  \"scale\":
+        [\n                    1.0,\n                    0.5002025531914894,\n                    1.4415926138560835,\n
+        \                   1.4415926138560835\n                  ]\n                }\n
+        \             ]\n            }\n          ],\n          \"name\": \"0\",\n
+        \         \"axes\": [\n            {\n              \"name\": \"c\",\n              \"type\":
+        \"channel\"\n            },\n            {\n              \"name\": \"z\",\n
+        \             \"type\": \"space\",\n              \"unit\": \"micrometer\"\n
+        \           },\n            {\n              \"name\": \"y\",\n              \"type\":
+        \"space\",\n              \"unit\": \"micrometer\"\n            },\n            {\n
+        \             \"name\": \"x\",\n              \"type\": \"space\",\n              \"unit\":
+        \"micrometer\"\n            }\n          ]\n        }\n      ],\n      \"image-label\":
+        {\n        \"source\": {\n          \"image\": \"../..\"\n        },\n        \"colors\":
+        [\n          {\n            \"label-value\": 1,\n            \"rgba\": [\n
+        \             128,\n              128,\n              128,\n              128\n
+        \           ]\n          },\n          {\n            \"label-value\": 2,\n
+        \           \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        3,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        4,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        5,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        6,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        7,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        8,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        9,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        10,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        11,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        12,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        13,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        14,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        15,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        16,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        17,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        18,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        19,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        20,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        21,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        22,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        23,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        24,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        25,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        26,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        27,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        28,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        29,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        30,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        31,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        32,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        33,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        34,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        35,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        36,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        37,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        38,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        39,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        40,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        41,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        42,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        43,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        44,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        45,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        46,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        47,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        48,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        49,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        50,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        51,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        52,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        53,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        54,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        55,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        56,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        57,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        58,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        59,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        60,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          },\n          {\n            \"label-value\":
+        61,\n            \"rgba\": [\n              128,\n              128,\n              128,\n
+        \             128\n            ]\n          }\n        ],\n        \"properties\":
+        [\n          {\n            \"label-value\": 1,\n            \"omero:shapeId\":
+        1664569,\n            \"omero:roiId\": 1380887\n          },\n          {\n
+        \           \"label-value\": 2,\n            \"omero:shapeId\": 1664617,\n
+        \           \"omero:roiId\": 1380888\n          },\n          {\n            \"label-value\":
+        3,\n            \"omero:shapeId\": 1664664,\n            \"omero:roiId\":
+        1380889\n          },\n          {\n            \"label-value\": 4,\n            \"omero:shapeId\":
+        1664709,\n            \"omero:roiId\": 1380890\n          },\n          {\n
+        \           \"label-value\": 5,\n            \"omero:shapeId\": 1664749,\n
+        \           \"omero:roiId\": 1380891\n          },\n          {\n            \"label-value\":
+        6,\n            \"omero:shapeId\": 1664787,\n            \"omero:roiId\":
+        1380892\n          },\n          {\n            \"label-value\": 7,\n            \"omero:shapeId\":
+        1664826,\n            \"omero:roiId\": 1380893\n          },\n          {\n
+        \           \"label-value\": 8,\n            \"omero:shapeId\": 1664859,\n
+        \           \"omero:roiId\": 1380894\n          },\n          {\n            \"label-value\":
+        9,\n            \"omero:shapeId\": 1664898,\n            \"omero:roiId\":
+        1380895\n          },\n          {\n            \"label-value\": 10,\n            \"omero:shapeId\":
+        1664932,\n            \"omero:roiId\": 1380896\n          },\n          {\n
+        \           \"label-value\": 11,\n            \"omero:shapeId\": 1664967,\n
+        \           \"omero:roiId\": 1380897\n          },\n          {\n            \"label-value\":
+        12,\n            \"omero:shapeId\": 1665000,\n            \"omero:roiId\":
+        1380898\n          },\n          {\n            \"label-value\": 13,\n            \"omero:shapeId\":
+        1665036,\n            \"omero:roiId\": 1380899\n          },\n          {\n
+        \           \"label-value\": 14,\n            \"omero:shapeId\": 1665078,\n
+        \           \"omero:roiId\": 1380900\n          },\n          {\n            \"label-value\":
+        15,\n            \"omero:shapeId\": 1665118,\n            \"omero:roiId\":
+        1380901\n          },\n          {\n            \"label-value\": 16,\n            \"omero:shapeId\":
+        1665156,\n            \"omero:roiId\": 1380902\n          },\n          {\n
+        \           \"label-value\": 17,\n            \"omero:shapeId\": 1665200,\n
+        \           \"omero:roiId\": 1380903\n          },\n          {\n            \"label-value\":
+        18,\n            \"omero:shapeId\": 1665238,\n            \"omero:roiId\":
+        1380904\n          },\n          {\n            \"label-value\": 19,\n            \"omero:shapeId\":
+        1665283,\n            \"omero:roiId\": 1380905\n          },\n          {\n
+        \           \"label-value\": 20,\n            \"omero:shapeId\": 1665319,\n
+        \           \"omero:roiId\": 1380906\n          },\n          {\n            \"label-value\":
+        21,\n            \"omero:shapeId\": 1665356,\n            \"omero:roiId\":
+        1380907\n          },\n          {\n            \"label-value\": 22,\n            \"omero:shapeId\":
+        1665396,\n            \"omero:roiId\": 1380908\n          },\n          {\n
+        \           \"label-value\": 23,\n            \"omero:shapeId\": 1665428,\n
+        \           \"omero:roiId\": 1380909\n          },\n          {\n            \"label-value\":
+        24,\n            \"omero:shapeId\": 1665467,\n            \"omero:roiId\":
+        1380910\n          },\n          {\n            \"label-value\": 25,\n            \"omero:shapeId\":
+        1665513,\n            \"omero:roiId\": 1380911\n          },\n          {\n
+        \           \"label-value\": 26,\n            \"omero:shapeId\": 1665541,\n
+        \           \"omero:roiId\": 1380912\n          },\n          {\n            \"label-value\":
+        27,\n            \"omero:shapeId\": 1665575,\n            \"omero:roiId\":
+        1380913\n          },\n          {\n            \"label-value\": 28,\n            \"omero:shapeId\":
+        1665611,\n            \"omero:roiId\": 1380914\n          },\n          {\n
+        \           \"label-value\": 29,\n            \"omero:shapeId\": 1665662,\n
+        \           \"omero:roiId\": 1380915\n          },\n          {\n            \"label-value\":
+        30,\n            \"omero:shapeId\": 1665709,\n            \"omero:roiId\":
+        1380916\n          },\n          {\n            \"label-value\": 31,\n            \"omero:shapeId\":
+        1665743,\n            \"omero:roiId\": 1380917\n          },\n          {\n
+        \           \"label-value\": 32,\n            \"omero:shapeId\": 1665777,\n
+        \           \"omero:roiId\": 1380918\n          },\n          {\n            \"label-value\":
+        33,\n            \"omero:shapeId\": 1665808,\n            \"omero:roiId\":
+        1380919\n          },\n          {\n            \"label-value\": 34,\n            \"omero:shapeId\":
+        1665853,\n            \"omero:roiId\": 1380920\n          },\n          {\n
+        \           \"label-value\": 35,\n            \"omero:shapeId\": 1665891,\n
+        \           \"omero:roiId\": 1380921\n          },\n          {\n            \"label-value\":
+        36,\n            \"omero:shapeId\": 1665935,\n            \"omero:roiId\":
+        1380922\n          },\n          {\n            \"label-value\": 37,\n            \"omero:shapeId\":
+        1665970,\n            \"omero:roiId\": 1380923\n          },\n          {\n
+        \           \"label-value\": 38,\n            \"omero:shapeId\": 1666013,\n
+        \           \"omero:roiId\": 1380924\n          },\n          {\n            \"label-value\":
+        39,\n            \"omero:shapeId\": 1666052,\n            \"omero:roiId\":
+        1380925\n          },\n          {\n            \"label-value\": 40,\n            \"omero:shapeId\":
+        1666085,\n            \"omero:roiId\": 1380926\n          },\n          {\n
+        \           \"label-value\": 41,\n            \"omero:shapeId\": 1666118,\n
+        \           \"omero:roiId\": 1380927\n          },\n          {\n            \"label-value\":
+        42,\n            \"omero:shapeId\": 1666158,\n            \"omero:roiId\":
+        1380928\n          },\n          {\n            \"label-value\": 43,\n            \"omero:shapeId\":
+        1666194,\n            \"omero:roiId\": 1380929\n          },\n          {\n
+        \           \"label-value\": 44,\n            \"omero:shapeId\": 1666235,\n
+        \           \"omero:roiId\": 1380930\n          },\n          {\n            \"label-value\":
+        45,\n            \"omero:shapeId\": 1666268,\n            \"omero:roiId\":
+        1380931\n          },\n          {\n            \"label-value\": 46,\n            \"omero:shapeId\":
+        1666307,\n            \"omero:roiId\": 1380932\n          },\n          {\n
+        \           \"label-value\": 47,\n            \"omero:shapeId\": 1666338,\n
+        \           \"omero:roiId\": 1380933\n          },\n          {\n            \"label-value\":
+        48,\n            \"omero:shapeId\": 1666378,\n            \"omero:roiId\":
+        1380934\n          },\n          {\n            \"label-value\": 49,\n            \"omero:shapeId\":
+        1666411,\n            \"omero:roiId\": 1380935\n          },\n          {\n
+        \           \"label-value\": 50,\n            \"omero:shapeId\": 1666446,\n
+        \           \"omero:roiId\": 1380936\n          },\n          {\n            \"label-value\":
+        51,\n            \"omero:shapeId\": 1666481,\n            \"omero:roiId\":
+        1380937\n          },\n          {\n            \"label-value\": 52,\n            \"omero:shapeId\":
+        1666518,\n            \"omero:roiId\": 1380938\n          },\n          {\n
+        \           \"label-value\": 53,\n            \"omero:shapeId\": 1666558,\n
+        \           \"omero:roiId\": 1380939\n          },\n          {\n            \"label-value\":
+        54,\n            \"omero:shapeId\": 1666596,\n            \"omero:roiId\":
+        1380940\n          },\n          {\n            \"label-value\": 55,\n            \"omero:shapeId\":
+        1666671,\n            \"omero:roiId\": 1380941\n          },\n          {\n
+        \           \"label-value\": 56,\n            \"omero:shapeId\": 1666711,\n
+        \           \"omero:roiId\": 1380942\n          },\n          {\n            \"label-value\":
+        57,\n            \"omero:shapeId\": 1666746,\n            \"omero:roiId\":
+        1380943\n          },\n          {\n            \"label-value\": 58,\n            \"omero:shapeId\":
+        1666789,\n            \"omero:roiId\": 1380944\n          },\n          {\n
+        \           \"label-value\": 59,\n            \"omero:shapeId\": 1666826,\n
+        \           \"omero:roiId\": 1380945\n          },\n          {\n            \"label-value\":
+        60,\n            \"omero:shapeId\": 1666846,\n            \"omero:roiId\":
+        1380946\n          },\n          {\n            \"label-value\": 61,\n            \"omero:shapeId\":
+        1666891,\n            \"omero:roiId\": 1380947\n          }\n        ]\n      }\n
+        \   }\n  },\n  \"zarr_format\": 3,\n  \"consolidated_metadata\": null,\n  \"node_type\":
+        \"group\"\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '20074'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      Etag:
+      - '"31f7d9fbfad90e7b66e3b6b4a1315839"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:07 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc74c-0069bd5b68-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/0/zarr.json
+  response:
+    body:
+      string: "{\n  \"shape\": [\n    1,\n    236,\n    275,\n    271\n  ],\n  \"data_type\":
+        \"int8\",\n  \"chunk_grid\": {\n    \"name\": \"regular\",\n    \"configuration\":
+        {\n      \"chunk_shape\": [\n        1,\n        59,\n        69,\n        136\n
+        \     ]\n    }\n  },\n  \"chunk_key_encoding\": {\n    \"name\": \"default\",\n
+        \   \"configuration\": {\n      \"separator\": \"/\"\n    }\n  },\n  \"fill_value\":
+        0,\n  \"codecs\": [\n    {\n      \"name\": \"bytes\"\n    },\n    {\n      \"name\":
+        \"zstd\",\n      \"configuration\": {\n        \"level\": 0,\n        \"checksum\":
+        false\n      }\n    }\n  ],\n  \"attributes\": {},\n  \"dimension_names\":
+        [\n    \"c\",\n    \"z\",\n    \"y\",\n    \"x\"\n  ],\n  \"zarr_format\":
+        3,\n  \"node_type\": \"array\",\n  \"storage_transformers\": []\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '678'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      Etag:
+      - '"fcc86fe5f8cb86b38b318fc32c077329"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:06 GMT
+      x-amz-request-id:
+      - tx000000000000001f00fd3-0069bd5b68-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/1/zarr.json
+  response:
+    body:
+      string: "{\n  \"shape\": [\n    1,\n    236,\n    137,\n    135\n  ],\n  \"data_type\":
+        \"int8\",\n  \"chunk_grid\": {\n    \"name\": \"regular\",\n    \"configuration\":
+        {\n      \"chunk_shape\": [\n        1,\n        118,\n        69,\n        68\n
+        \     ]\n    }\n  },\n  \"chunk_key_encoding\": {\n    \"name\": \"default\",\n
+        \   \"configuration\": {\n      \"separator\": \"/\"\n    }\n  },\n  \"fill_value\":
+        0,\n  \"codecs\": [\n    {\n      \"name\": \"bytes\"\n    },\n    {\n      \"name\":
+        \"zstd\",\n      \"configuration\": {\n        \"level\": 0,\n        \"checksum\":
+        false\n      }\n    }\n  ],\n  \"attributes\": {},\n  \"dimension_names\":
+        [\n    \"c\",\n    \"z\",\n    \"y\",\n    \"x\"\n  ],\n  \"zarr_format\":
+        3,\n  \"node_type\": \"array\",\n  \"storage_transformers\": []\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '678'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      Etag:
+      - '"234279d60e772afd419518ec36012b52"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:06 GMT
+      x-amz-request-id:
+      - tx000000000000001f00fd7-0069bd5b68-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/2/zarr.json
+  response:
+    body:
+      string: "{\n  \"shape\": [\n    1,\n    236,\n    68,\n    67\n  ],\n  \"data_type\":
+        \"int8\",\n  \"chunk_grid\": {\n    \"name\": \"regular\",\n    \"configuration\":
+        {\n      \"chunk_shape\": [\n        1,\n        118,\n        34,\n        67\n
+        \     ]\n    }\n  },\n  \"chunk_key_encoding\": {\n    \"name\": \"default\",\n
+        \   \"configuration\": {\n      \"separator\": \"/\"\n    }\n  },\n  \"fill_value\":
+        0,\n  \"codecs\": [\n    {\n      \"name\": \"bytes\"\n    },\n    {\n      \"name\":
+        \"zstd\",\n      \"configuration\": {\n        \"level\": 0,\n        \"checksum\":
+        false\n      }\n    }\n  ],\n  \"attributes\": {},\n  \"dimension_names\":
+        [\n    \"c\",\n    \"z\",\n    \"y\",\n    \"x\"\n  ],\n  \"zarr_format\":
+        3,\n  \"node_type\": \"array\",\n  \"storage_transformers\": []\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '676'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      Etag:
+      - '"9e6a60c24bb38d771a5de9a33d2b4bfe"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:06 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc75d-0069bd5b68-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/labels/zarr.json
+  response:
+    body:
+      string: <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchKey</Code><BucketName>idr</BucketName><RequestId>tx000000000000001ebc75e-0069bd5b68-1b48f1f14-default</RequestId><HostId>1b48f1f14-default-default</HostId></Error>
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '220'
+      Content-Type:
+      - application/xml
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc75e-0069bd5b68-1b48f1f14-default
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/0/zarr.json
+  response:
+    body:
+      string: "{\n  \"shape\": [\n    1,\n    236,\n    275,\n    271\n  ],\n  \"data_type\":
+        \"int8\",\n  \"chunk_grid\": {\n    \"name\": \"regular\",\n    \"configuration\":
+        {\n      \"chunk_shape\": [\n        1,\n        59,\n        69,\n        136\n
+        \     ]\n    }\n  },\n  \"chunk_key_encoding\": {\n    \"name\": \"default\",\n
+        \   \"configuration\": {\n      \"separator\": \"/\"\n    }\n  },\n  \"fill_value\":
+        0,\n  \"codecs\": [\n    {\n      \"name\": \"bytes\"\n    },\n    {\n      \"name\":
+        \"zstd\",\n      \"configuration\": {\n        \"level\": 0,\n        \"checksum\":
+        false\n      }\n    }\n  ],\n  \"attributes\": {},\n  \"dimension_names\":
+        [\n    \"c\",\n    \"z\",\n    \"y\",\n    \"x\"\n  ],\n  \"zarr_format\":
+        3,\n  \"node_type\": \"array\",\n  \"storage_transformers\": []\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '678'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      Etag:
+      - '"fcc86fe5f8cb86b38b318fc32c077329"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:06 GMT
+      x-amz-request-id:
+      - tx000000000000001f00fdb-0069bd5b68-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/1/zarr.json
+  response:
+    body:
+      string: "{\n  \"shape\": [\n    1,\n    236,\n    137,\n    135\n  ],\n  \"data_type\":
+        \"int8\",\n  \"chunk_grid\": {\n    \"name\": \"regular\",\n    \"configuration\":
+        {\n      \"chunk_shape\": [\n        1,\n        118,\n        69,\n        68\n
+        \     ]\n    }\n  },\n  \"chunk_key_encoding\": {\n    \"name\": \"default\",\n
+        \   \"configuration\": {\n      \"separator\": \"/\"\n    }\n  },\n  \"fill_value\":
+        0,\n  \"codecs\": [\n    {\n      \"name\": \"bytes\"\n    },\n    {\n      \"name\":
+        \"zstd\",\n      \"configuration\": {\n        \"level\": 0,\n        \"checksum\":
+        false\n      }\n    }\n  ],\n  \"attributes\": {},\n  \"dimension_names\":
+        [\n    \"c\",\n    \"z\",\n    \"y\",\n    \"x\"\n  ],\n  \"zarr_format\":
+        3,\n  \"node_type\": \"array\",\n  \"storage_transformers\": []\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '678'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      Etag:
+      - '"234279d60e772afd419518ec36012b52"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:06 GMT
+      x-amz-request-id:
+      - tx000000000000001f00fdd-0069bd5b68-1b57d0792-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr/labels/0/2/zarr.json
+  response:
+    body:
+      string: "{\n  \"shape\": [\n    1,\n    236,\n    68,\n    67\n  ],\n  \"data_type\":
+        \"int8\",\n  \"chunk_grid\": {\n    \"name\": \"regular\",\n    \"configuration\":
+        {\n      \"chunk_shape\": [\n        1,\n        118,\n        34,\n        67\n
+        \     ]\n    }\n  },\n  \"chunk_key_encoding\": {\n    \"name\": \"default\",\n
+        \   \"configuration\": {\n      \"separator\": \"/\"\n    }\n  },\n  \"fill_value\":
+        0,\n  \"codecs\": [\n    {\n      \"name\": \"bytes\"\n    },\n    {\n      \"name\":
+        \"zstd\",\n      \"configuration\": {\n        \"level\": 0,\n        \"checksum\":
+        false\n      }\n    }\n  ],\n  \"attributes\": {},\n  \"dimension_names\":
+        [\n    \"c\",\n    \"z\",\n    \"y\",\n    \"x\"\n  ],\n  \"zarr_format\":
+        3,\n  \"node_type\": \"array\",\n  \"storage_transformers\": []\n}"
+    headers:
+      Accept-Ranges:
+      - bytes
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '676'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 20 Mar 2026 14:36:24 GMT
+      Etag:
+      - '"9e6a60c24bb38d771a5de9a33d2b4bfe"'
+      Last-Modified:
+      - Fri, 20 Mar 2026 13:44:06 GMT
+      x-amz-request-id:
+      - tx000000000000001ebc762-0069bd5b68-1b48f1f14-default
+      x-rgw-object-type:
+      - Normal
+    status:
+      code: 200
+      message: OK
+version: 1

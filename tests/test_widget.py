@@ -31,3 +31,26 @@ def test_example_q_widget(make_napari_viewer, capsys):
     # read captured output and check that it's as we expected
     # captured = capsys.readouterr()
     # assert captured.out == "napari has 1 layers\n"
+
+
+@pytest.mark.vcr
+def test_load_v05_labels(make_napari_viewer, capsys) -> None:
+    url = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.5/idr0062A/6001240_labels.zarr"
+
+    # make viewer and add an image layer using our fixture
+    viewer = make_napari_viewer()
+
+    # create our widget, passing in the viewer
+    widget = OMEZarrpariWidget(viewer)
+    assert widget.load_pane_status_text == ""
+    # Load an image
+    with pytest.warns(UserWarning, match="zarr array cannot be sliced lazily"):
+        widget._load_ome_zarr(url, visible=False)
+    if widget.load_pane_status_text != "Successfully loaded":
+        print(capsys.readouterr())
+        raise RuntimeError("Data not loaded successfully")
+    assert [layer.name for layer in viewer.layers] == [
+        "Image",
+        "Image [1]",
+        "0",
+    ]

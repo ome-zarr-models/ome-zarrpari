@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Literal
 import napari.layers
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
+import ome_zarr_models.v05
 import ome_zarr_models.v05.multiscales
 import zarr
 from napari.settings import get_settings
@@ -264,9 +265,16 @@ def _load_ome_zarr_image(
             image_label_group = zarr.open_group(
                 zarr_group.store_path / "labels" / path
             )
-            image_labels = ome_zarr_models.v04.ImageLabel.from_zarr(
-                image_label_group
-            )
+            image_label_cls: type[AnyImageLabel]
+            if image.ome_zarr_version == "0.4":
+                image_label_cls = ome_zarr_models.v04.ImageLabel
+            elif image.ome_zarr_version == "0.5":
+                image_label_cls = ome_zarr_models.v05.ImageLabel
+            else:
+                raise ValueError(
+                    f"Can't handle OME-Zarr version {image.ome_zarr_version}"
+                )
+            image_labels = image_label_cls.from_zarr(image_label_group)
             for multiscale in image_labels.ome_attributes.multiscales:
                 # TODO: correctly assign color from the label metdaata
                 layer = _add_multiscale_layer(

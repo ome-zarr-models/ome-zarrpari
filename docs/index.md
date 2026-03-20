@@ -66,6 +66,10 @@ The image at index `i` is downsampled by a factor of `2**i`.
 
 ## Changelog
 
+**1.0.2**
+
+- Fix loading OME-Zarr 0.5 labels that are associated with an image.
+
 **1.0.1**
 
 - Fix loading OME-Zarr 0.5 data that uses a v2 chunk encoding for the arrays.

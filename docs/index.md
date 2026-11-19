@@ -4,7 +4,7 @@ icon: lucide/rocket
 
 # ome-zarrpari
 
-Load and use OME-Zarr 0.4, 0.5 and 0.6 images and labels in napari, from any data source!
+Load and use OME-Zarr 0.4, 0.5 and 0.6 images, labels and scenes in napari, from any data source!
 
 Images are loaded into a *napari multiscale image layer*.
 This means higher resolution levels of the data are progressively loaded as you zoom in.
@@ -18,6 +18,18 @@ This is what the widget looks like:
 
 You can either copy/paste a URL or local path into the text box, or press "Browse" to open a file browser and select a local directory.
 Then press the "Load OME-Zarr" button to load the image.
+
+### Scenes
+OME-Zarr 0.6 scenes combine several images (e.g. tiles) with coordinate transformations
+that place them in shared scene coordinate systems.
+Each scene image is loaded as separate layers, named after its path in the scene,
+and placed in the first coordinate system of the scene.
+If the scene has more than one coordinate system, you can switch between them with the
+"Scene coordinate system" dropdown, which applies to the most recently loaded scene.
+
+Only transformations that can be converted to an affine transformation are supported.
+Images that can't be placed in the selected scene coordinate system are shown in their
+own (intrinsic) coordinate system, with a warning.
 
 ### Programmatic usage
 If you already have a Zarr group you want to add to a napari Viewer, you can use:
@@ -71,6 +83,8 @@ The image at index `i` is downsampled by a factor of `2**i`.
 - Add support for loading OME-Zarr 0.6 images and labels.
   Images are loaded in their intrinsic physical coordinate system.
   Note that OME-Zarr 0.6 support in `ome-zarr-models` is still in beta.
+- Add support for loading OME-Zarr 0.6 scenes.
+  Scene images are placed in a scene coordinate system, which can be selected in the widget.
 - Apply the translation of the highest resolution dataset to the loaded layers
   (previously only the scale was applied).
 - Axes without a unit get the napari default unit ('pixel'), as in napari-ome-zarr

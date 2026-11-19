@@ -1,4 +1,6 @@
+import warnings
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
 import dask.array as da
@@ -27,6 +29,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from ome_zarrpari._scene import SceneGraph
 from ome_zarrpari._transforms import TransformGraph, to_napari_affine
 
 if TYPE_CHECKING:
@@ -45,7 +48,7 @@ AnyImageLabel = (
     | ome_zarr_models.v06.ImageLabel
 )
 
-SUPPORTED_CLASSES = (AnyImage, AnyImageLabel)
+SUPPORTED_CLASSES = (AnyImage, AnyImageLabel, ome_zarr_models.v06.Scene)
 
 AnyMultiscale = (
     ome_zarr_models.v04.multiscales.Multiscale
@@ -65,17 +68,74 @@ IMAGE_LABEL_CLASSES: dict[str, type[AnyImageLabel]] = {
     "0.6": ome_zarr_models.v06.ImageLabel,
 }
 
+AddedLayers = dict[
+    napari.layers.Image | napari.layers.Labels, AnyImage | AnyImageLabel
+]
+
+
+@dataclass
+class LoadedScene:
+    """
+    The layers of a loaded OME-Zarr 0.6 scene, one or more per scene image.
+    """
+
+    graph: SceneGraph
+    # Scene image path -> layers loaded from that image
+    layers: dict[str, AddedLayers]
+
+    @property
+    def coordinate_systems(self) -> list[str]:
+        return self.graph.coordinate_systems
+
+    def set_coordinate_system(self, coordinate_system: str) -> None:
+        """
+        Place all layers in a scene coordinate system.
+
+        Layers that can't be placed are shown in the intrinsic coordinate
+        system of their image, with a warning.
+        """
+        not_placed = []
+        for path, layers in self.layers.items():
+            matrix = self.graph.image_to_scene(path, coordinate_system)
+            # The channel axis isn't a layer dimension, for both the image
+            # layers (one per channel) and the label layers (no channels)
+            channel_axis = _get_channel_axis(
+                self.graph.images[path].ome_attributes.multiscales[0]
+            )
+            affine = (
+                None
+                if matrix is None
+                else to_napari_affine(matrix, channel_axis)
+            )
+            for layer in layers:
+                # Labels are placed like their image, which assumes
+                # they have the same (non-channel) dimensions
+                if affine is not None and len(affine) == layer.ndim + 1:
+                    layer.affine = affine
+                    continue
+                not_placed.append(layer.name)
+                layer.affine = np.eye(layer.ndim + 1)
+        if not_placed:
+            warnings.warn(
+                f"Could not place layers {not_placed} in scene coordinate "
+                f"system '{coordinate_system}' with an affine transform. "
+                "Showing them in their intrinsic coordinate system instead.",
+                stacklevel=2,
+            )
+
 
 class OMEZarrpariWidget(QWidget):
     def __init__(self, viewer: "napari.viewer.Viewer"):
         super().__init__()
         self.viewer = viewer
         # Keep track of layers added by this widget
-        self.added_layers = {}
-        # Multiscale image each added layer was created from
+        self.added_layers: AddedLayers = {}
+        # Multiscale image each added (non-scene) layer was created from
         self._layer_multiscales: dict[napari.layers.Layer, AnyMultiscale] = {}
         # Coordinate system each added layer is shown in, if not intrinsic
         self._layer_coordinate_systems: dict[napari.layers.Layer, str] = {}
+        # The most recently loaded scene
+        self.scene: LoadedScene | None = None
 
         # Create text box and button
         self.text_box = QLineEdit()
@@ -123,6 +183,15 @@ class OMEZarrpariWidget(QWidget):
         self.viewer.layers.selection.events.changed.connect(
             self._on_layer_selection_changed
         )
+
+        # Coordinate system of the most recently loaded scene
+        layout.addWidget(QLabel("Scene coordinate system"))
+        self.coord_system_dropdown = QComboBox()
+        self.coord_system_dropdown.setEnabled(False)
+        self.coord_system_dropdown.currentTextChanged.connect(
+            self._on_coord_system_changed
+        )
+        layout.addWidget(self.coord_system_dropdown)
 
         layout.addStretch(100)  # Push everything to the top
 
@@ -196,14 +265,22 @@ class OMEZarrpariWidget(QWidget):
             )
             return
 
-        added_layers = _load_ome_zarr_image(
-            self.viewer,
-            group,
-            data,
-            visible=visible,
-            layer_multiscales=self._layer_multiscales,
-        )
-        self.added_layers.update(added_layers)
+        if isinstance(data, ome_zarr_models.v06.Scene):
+            scene = _load_ome_zarr_scene(
+                self.viewer, group, data, visible=visible
+            )
+            for layers in scene.layers.values():
+                self.added_layers.update(layers)
+            self._set_scene(scene)
+        else:
+            added_layers = _load_ome_zarr_image(
+                self.viewer,
+                group,
+                data,
+                visible=visible,
+                layer_multiscales=self._layer_multiscales,
+            )
+            self.added_layers.update(added_layers)
         self.status_text.setText("Successfully loaded")
         self._on_layer_selection_changed()
 
@@ -290,6 +367,28 @@ class OMEZarrpariWidget(QWidget):
             f"Showing '{multiscale.name}' in coordinate system "
             f"'{coordinate_system}'"
         )
+
+    def _set_scene(self, scene: LoadedScene) -> None:
+        """
+        Set the scene that the coordinate system dropdown applies to.
+        """
+        self.scene = None
+        self.coord_system_dropdown.clear()
+        self.coord_system_dropdown.addItems(scene.coordinate_systems)
+        self.coord_system_dropdown.setEnabled(
+            len(scene.coordinate_systems) > 1
+        )
+        self.scene = scene
+
+    def _on_coord_system_changed(self, coordinate_system: str) -> None:
+        if self.scene is None or not coordinate_system:
+            return
+        # Skip layers that were removed from the viewer
+        for layers in self.scene.layers.values():
+            for layer in list(layers):
+                if layer not in self.viewer.layers:
+                    del layers[layer]
+        self.scene.set_coordinate_system(coordinate_system)
 
 
 def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
@@ -467,11 +566,12 @@ def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:
 
 def load_ome_zarr(
     viewer: "napari.Viewer", group: zarr.Group, *, visible: bool = True
-) -> dict[
-    napari.layers.Image | napari.layers.Labels, AnyImage | AnyImageLabel
-]:
+) -> AddedLayers:
     """
     Load an OME-Zarr file into a napari viewer.
+
+    The images of an OME-Zarr 0.6 scene are each loaded as separate layers,
+    placed in the first coordinate system of the scene.
 
     Parameters
     ----------
@@ -494,7 +594,48 @@ def load_ome_zarr(
             f"Found {type(data)} - loading not currently supported."
         )
 
+    if isinstance(data, ome_zarr_models.v06.Scene):
+        scene = _load_ome_zarr_scene(viewer, group, data, visible=visible)
+        added_layers: AddedLayers = {}
+        for layers in scene.layers.values():
+            added_layers.update(layers)
+        return added_layers
+
     return _load_ome_zarr_image(viewer, group, data, visible=visible)
+
+
+def _load_ome_zarr_scene(
+    viewer: "napari.Viewer",
+    zarr_group: zarr.Group,
+    scene: ome_zarr_models.v06.Scene,
+    *,
+    visible: bool = True,
+) -> LoadedScene:
+    """
+    Load the images of an OME-Zarr 0.6 scene on to the napari viewer,
+    placed in the first coordinate system of the scene.
+    """
+    graph = SceneGraph(scene)
+    layers = {
+        path: _load_ome_zarr_image(
+            viewer,
+            zarr.open_group(zarr_group.store_path / path, mode="r"),
+            image,
+            visible=visible,
+            name=path,
+        )
+        for path, image in graph.images.items()
+    }
+    loaded_scene = LoadedScene(graph=graph, layers=layers)
+    if graph.coordinate_systems:
+        loaded_scene.set_coordinate_system(graph.coordinate_systems[0])
+    else:
+        warnings.warn(
+            "Scene has no coordinate systems, showing each image in its "
+            "intrinsic coordinate system.",
+            stacklevel=2,
+        )
+    return loaded_scene
 
 
 def _load_ome_zarr_image(
@@ -503,12 +644,14 @@ def _load_ome_zarr_image(
     image: AnyImage | AnyImageLabel,
     *,
     visible: bool = True,
+    name: str | None = None,
     layer_multiscales: dict[napari.layers.Layer, AnyMultiscale] | None = None,
-) -> dict[
-    napari.layers.Image | napari.layers.Labels, AnyImage | AnyImageLabel
-]:
+) -> AddedLayers:
     """
     Load an OME-Zarr image on to the napari viewer.
+
+    If name is given, it is used as the name of the image layers, and as a
+    prefix for the names of the label layers.
 
     If given, ``layer_multiscales`` is updated with the multiscale image each
     added layer was created from.
@@ -518,7 +661,7 @@ def _load_ome_zarr_image(
     layer_type: Literal["image", "labels"] = (
         "image" if isinstance(image, AnyImage) else "labels"
     )
-    added_layers = {}
+    added_layers: AddedLayers = {}
     # Add all the images
     for multiscale in image.ome_attributes.multiscales:
         layer = _add_multiscale_layer(
@@ -527,6 +670,7 @@ def _load_ome_zarr_image(
             zarr_group,
             layer_type=layer_type,
             visible=visible,
+            name=name,
         )
         for layer_ in layer if isinstance(layer, list) else [layer]:
             added_layers[layer_] = image
@@ -552,6 +696,7 @@ def _load_ome_zarr_image(
                     image_label_group,
                     layer_type="labels",
                     visible=visible,
+                    name=None if name is None else f"{name}: {path}",
                 )
                 added_layers[layer] = image_labels
                 layer_multiscales[layer] = multiscale
@@ -566,10 +711,14 @@ def _add_multiscale_layer(
     *,
     layer_type: Literal["image", "labels"],
     visible: bool = True,
+    name: str | None = None,
 ) -> napari.layers.Image | list[napari.layers.Image] | napari.layers.Labels:
     """
     Add a OME-Zarr multiscales dataset to the napari viewer.
+
+    The layer is named after the multiscale, unless name is given.
     """
+    layer_name = multiscale.name if name is None else name
     arrays = [
         da.from_array(
             zarr.open_array(
@@ -594,7 +743,7 @@ def _add_multiscale_layer(
 
         return viewer.add_image(
             arrays,
-            name=multiscale.name,
+            name=layer_name,
             multiscale=True,
             visible=visible,
             axis_labels=axis_labels,
@@ -606,7 +755,7 @@ def _add_multiscale_layer(
     else:
         return viewer.add_labels(
             arrays,
-            name=multiscale.name,
+            name=layer_name,
             multiscale=True,
             visible=visible,
             axis_labels=axis_labels,

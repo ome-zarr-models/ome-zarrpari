@@ -1,7 +1,7 @@
 import warnings
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import dask.array as da
 import napari.layers
@@ -14,12 +14,14 @@ import ome_zarr_models.v06
 import ome_zarr_models.v06.multiscales
 import zarr
 from napari.settings import get_settings
+from napari.utils.colormaps import CMYBGR, MAGENTA_GREEN
 from ome_zarr_models import open_ome_zarr
 from ome_zarr_models.common.coordinate_transformations import (
     VectorScale,
     VectorTranslation,
 )
 from qtpy.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QHBoxLayout,
@@ -29,6 +31,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from ome_zarrpari._fusion import Tile, fuse
 from ome_zarrpari._scene import SceneGraph
 from ome_zarrpari._transforms import TransformGraph, to_napari_affine
 
@@ -73,55 +76,371 @@ AddedLayers = dict[
 ]
 
 
+# Layers fused together: (layer type, label image path, channel index,
+# number of dimensions, dtype)
+_FuseGroup = tuple[
+    Literal["image", "labels"], str | None, int | None, int, np.dtype
+]
+
+
 @dataclass
-class LoadedScene:
+class LayerSpec:
     """
-    The layers of a loaded OME-Zarr 0.6 scene, one or more per scene image.
+    A napari layer, before it is added to the viewer.
     """
 
-    graph: SceneGraph
-    # Scene image path -> layers loaded from that image
-    layers: dict[str, AddedLayers]
+    # Multiscale levels, highest resolution first
+    data: list[da.Array]
+    layer_type: Literal["image", "labels"]
+    # Keyword arguments for napari's add_image/add_labels
+    kwargs: dict[str, Any]
+    # The OME-Zarr model the data is from
+    model: AnyImage | AnyImageLabel
+    # The path of the label image within the labels group, for labels
+    label: str | None = None
+    # The multiscale the layer is made from (None for fused layers)
+    multiscale: AnyMultiscale | None = None
+
+    @property
+    def channel_axis(self) -> int | None:
+        return self.kwargs.get("channel_axis")
+
+    @property
+    def ndim(self) -> int:
+        """
+        Number of layer dimensions (the channel axis isn't a layer dimension).
+        """
+        ndim = self.data[0].ndim
+        return ndim if self.channel_axis is None else ndim - 1
+
+    def add_to(self, viewer: "napari.Viewer") -> AddedLayers:
+        """
+        Add this layer (one per channel for images) to a viewer.
+        """
+        if self.layer_type == "image":
+            layers = viewer.add_image(
+                self.data, multiscale=True, **self.kwargs
+            )
+        else:
+            layers = viewer.add_labels(
+                self.data, multiscale=True, **self.kwargs
+            )
+        if not isinstance(layers, list):
+            layers = [layers]
+        return dict.fromkeys(layers, self.model)
+
+
+def _add_layers(
+    viewer: "napari.Viewer", specs: list[LayerSpec]
+) -> AddedLayers:
+    added_layers: AddedLayers = {}
+    for spec in specs:
+        added_layers.update(spec.add_to(viewer))
+    return added_layers
+
+
+class LoadedScene:
+    """
+    The layers of an OME-Zarr 0.6 scene, shown in a napari viewer.
+
+    The scene images are either shown as separate layers (one or more per
+    scene image), or fused into one layer per channel and label image.
+
+    Parameters
+    ----------
+    viewer :
+        Viewer to show the scene in.
+    name :
+        Name of the scene, used for the names of fused layers.
+    graph :
+        Coordinate system graph of the scene.
+    specs :
+        Scene image path -> layers of that image.
+    """
+
+    def __init__(
+        self,
+        viewer: "napari.Viewer",
+        name: str,
+        graph: SceneGraph,
+        specs: dict[str, list[LayerSpec]],
+    ):
+        self.viewer = viewer
+        self.name = name
+        self.graph = graph
+        self.specs = specs
+        # Layers currently shown
+        self.layers: AddedLayers = {}
+        # Whether the layers are fused, None if not shown yet
+        self.fused: bool | None = None
+        # Separate layers per scene image path, when not fused
+        self._separate_layers: dict[str, list[napari.layers.Layer]] = {}
 
     @property
     def coordinate_systems(self) -> list[str]:
         return self.graph.coordinate_systems
 
-    def set_coordinate_system(self, coordinate_system: str) -> None:
+    def show(
+        self, coordinate_system: str | None, *, fused: bool
+    ) -> tuple[list[napari.layers.Layer], AddedLayers]:
         """
-        Place all layers in a scene coordinate system.
+        Show the scene in a scene coordinate system (or None to show each
+        image in its intrinsic coordinate system), replacing any layers
+        already shown.
 
-        Layers that can't be placed are shown in the intrinsic coordinate
-        system of their image, with a warning.
+        Layers that can't be placed in the scene coordinate system are shown
+        as separate layers in the intrinsic coordinate system of their image,
+        with a warning.
+
+        Returns
+        -------
+        removed :
+            Layers removed from the viewer.
+        added :
+            Layers added to the viewer.
         """
-        not_placed = []
-        for path, layers in self.layers.items():
-            matrix = self.graph.image_to_scene(path, coordinate_system)
-            # The channel axis isn't a layer dimension, for both the image
-            # layers (one per channel) and the label layers (no channels)
-            channel_axis = _get_channel_axis(
-                self.graph.images[path].ome_attributes.multiscales[0]
-            )
-            affine = (
-                None
-                if matrix is None
-                else to_napari_affine(matrix, channel_axis)
-            )
-            for layer in layers:
-                # Labels are placed like their image, which assumes
-                # they have the same (non-channel) dimensions
-                if affine is not None and len(affine) == layer.ndim + 1:
+        affines = {
+            path: self._get_affine(path, coordinate_system)
+            for path in self.specs
+        }
+        if self.fused is False and not fused:
+            # Already showing separate layers: only update their affines
+            removed = self._forget_removed_layers()
+            not_placed = []
+            for path, layers in self._separate_layers.items():
+                for layer in layers:
+                    affine = _fit_affine(affines[path], layer.ndim)
+                    if affine is None:
+                        not_placed.append(layer.name)
+                        affine = np.eye(layer.ndim + 1)
                     layer.affine = affine
+            self._warn_not_placed(not_placed, coordinate_system)
+            return removed, {}
+
+        removed = self._remove_layers()
+        self._separate_layers = {}
+        if fused:
+            added = self._add_fused(affines, coordinate_system)
+        else:
+            added = self._add_separate(affines, coordinate_system)
+        self.layers = dict(added)
+        self.fused = fused
+        return removed, added
+
+    def _get_affine(
+        self, path: str, coordinate_system: str | None
+    ) -> np.ndarray | None:
+        """
+        napari affine (without channel axis) from the intrinsic coordinate
+        system of a scene image to a scene coordinate system.
+        """
+        if coordinate_system is None:
+            return None
+        matrix = self.graph.image_to_scene(path, coordinate_system)
+        if matrix is None:
+            return None
+        # The channel axis isn't a layer dimension, for both the image
+        # layers (one per channel) and the label layers (no channels)
+        channel_axis = _get_channel_axis(
+            self.graph.images[path].ome_attributes.multiscales[0]
+        )
+        return to_napari_affine(matrix, channel_axis)
+
+    def _add_separate(
+        self,
+        affines: dict[str, np.ndarray | None],
+        coordinate_system: str | None,
+    ) -> AddedLayers:
+        added: AddedLayers = {}
+        not_placed = []
+        for path, specs in self.specs.items():
+            layers = _add_layers(self.viewer, specs)
+            added.update(layers)
+            self._separate_layers[path] = list(layers)
+            for layer in layers:
+                affine = _fit_affine(affines[path], layer.ndim)
+                if affine is None:
+                    not_placed.append(layer.name)
+                else:
+                    layer.affine = affine
+        self._warn_not_placed(not_placed, coordinate_system)
+        return added
+
+    def _add_fused(
+        self,
+        affines: dict[str, np.ndarray | None],
+        coordinate_system: str | None,
+    ) -> AddedLayers:
+        # Group the (channels of the) layers that are fused together
+        groups: dict[
+            _FuseGroup, list[tuple[LayerSpec, int | None, np.ndarray]]
+        ] = {}
+        not_placed_specs: list[LayerSpec] = []
+        for path, specs in self.specs.items():
+            for spec in specs:
+                affine: np.ndarray | None
+                if coordinate_system is None:
+                    affine = np.eye(spec.ndim + 1)
+                else:
+                    affine = _fit_affine(affines[path], spec.ndim)
+                if affine is None:
+                    not_placed_specs.append(spec)
                     continue
-                not_placed.append(layer.name)
-                layer.affine = np.eye(layer.ndim + 1)
-        if not_placed:
+                channels: list[int | None] = (
+                    [None]
+                    if spec.channel_axis is None
+                    else list(range(spec.data[0].shape[spec.channel_axis]))
+                )
+                for channel in channels:
+                    key: _FuseGroup = (
+                        spec.layer_type,
+                        spec.label,
+                        channel,
+                        spec.ndim,
+                        spec.data[0].dtype,
+                    )
+                    groups.setdefault(key, []).append((spec, channel, affine))
+
+        n_channels = len(
+            {key[2] for key in groups if key[0] == "image"} - {None}
+        )
+        dtypes_per_group: dict[tuple, set[np.dtype]] = {}
+        for group in groups:
+            dtypes_per_group.setdefault(group[:4], set()).add(group[4])
+
+        added: AddedLayers = {}
+        for group, members in groups.items():
+            layer_type, label, channel, _, dtype = group
+            tiles = [
+                Tile(
+                    data=_select_channel(spec, channel),
+                    data_to_world=affine @ _scale_translate_matrix(spec),
+                )
+                for spec, _, affine in members
+            ]
+            fused = fuse(tiles, is_labels=layer_type == "labels")
+
+            name = self.name
+            if label is not None:
+                name = f"{name}: {label}"
+            elif channel is not None and n_channels > 1:
+                name = f"{name} [{channel}]"
+            if len(dtypes_per_group[group[:4]]) > 1:
+                name = f"{name} ({dtype})"
+
+            first_spec = members[0][0]
+            kwargs = {
+                k: v
+                for k, v in first_spec.kwargs.items()
+                if k not in ("channel_axis", "name", "scale", "translate")
+            }
+            kwargs.update(
+                name=name, scale=fused.scale, translate=fused.translate
+            )
+            if layer_type == "image" and channel is not None:
+                kwargs.update(_channel_display(channel, n_channels))
+            spec = LayerSpec(
+                data=fused.data,
+                layer_type=layer_type,
+                kwargs=kwargs,
+                model=first_spec.model,
+                label=label,
+            )
+            added.update(spec.add_to(self.viewer))
+
+        # Layers that can't be placed are shown as separate layers
+        not_placed = _add_layers(self.viewer, not_placed_specs)
+        added.update(not_placed)
+        self._warn_not_placed(
+            [layer.name for layer in not_placed], coordinate_system
+        )
+        return added
+
+    def _forget_removed_layers(self) -> list[napari.layers.Layer]:
+        """
+        Forget about layers that were removed from the viewer.
+        """
+        removed = [
+            layer for layer in self.layers if layer not in self.viewer.layers
+        ]
+        for layer in removed:
+            del self.layers[layer]
+        for path, layers in self._separate_layers.items():
+            self._separate_layers[path] = [
+                layer for layer in layers if layer in self.viewer.layers
+            ]
+        return removed
+
+    def _remove_layers(self) -> list[napari.layers.Layer]:
+        """
+        Remove the shown layers from the viewer.
+        """
+        removed = list(self.layers)
+        for layer in removed:
+            if layer in self.viewer.layers:
+                self.viewer.layers.remove(layer)
+        self.layers = {}
+        return removed
+
+    @staticmethod
+    def _warn_not_placed(
+        layer_names: list[str], coordinate_system: str | None
+    ) -> None:
+        if layer_names and coordinate_system is not None:
             warnings.warn(
-                f"Could not place layers {not_placed} in scene coordinate "
+                f"Could not place layers {layer_names} in scene coordinate "
                 f"system '{coordinate_system}' with an affine transform. "
                 "Showing them in their intrinsic coordinate system instead.",
-                stacklevel=2,
+                stacklevel=3,
             )
+
+
+def _fit_affine(affine: np.ndarray | None, ndim: int) -> np.ndarray | None:
+    """
+    The affine if it fits a layer with ndim dimensions, otherwise None.
+
+    Labels are placed like their image, which assumes they have the same
+    (non-channel) dimensions.
+    """
+    if affine is None or len(affine) != ndim + 1:
+        return None
+    return affine
+
+
+def _select_channel(spec: LayerSpec, channel: int | None) -> list[da.Array]:
+    """
+    The multiscale levels of one channel of a layer.
+    """
+    if channel is None or spec.channel_axis is None:
+        return spec.data
+    index = (slice(None),) * spec.channel_axis + (channel,)
+    return [level[index] for level in spec.data]
+
+
+def _scale_translate_matrix(spec: LayerSpec) -> np.ndarray:
+    """
+    Homogeneous matrix of the scale and translation of a layer.
+    """
+    ndim = spec.ndim
+    matrix = np.eye(ndim + 1)
+    matrix[:ndim, :ndim] = np.diag(spec.kwargs.get("scale", np.ones(ndim)))
+    matrix[:ndim, ndim] = spec.kwargs.get("translate", np.zeros(ndim))
+    return matrix
+
+
+def _channel_display(channel: int, n_channels: int) -> dict[str, str]:
+    """
+    Colormap and blending of a channel layer, as napari sets them when
+    adding an image with a channel axis.
+    """
+    if n_channels == 1:
+        colormap = "gray"
+    elif n_channels == 2:
+        colormap = MAGENTA_GREEN[channel % 2]
+    else:
+        colormap = CMYBGR[channel % len(CMYBGR)]
+    blending = "translucent_no_depth" if channel == 0 else "additive"
+    return {"colormap": colormap, "blending": blending}
 
 
 class OMEZarrpariWidget(QWidget):
@@ -145,6 +464,16 @@ class OMEZarrpariWidget(QWidget):
         self.browse_btn = QPushButton("Browse")
         self.browse_btn.clicked.connect(self._on_browse)
 
+        # Fuse the images of scenes into one layer per channel/label image
+        self.fuse_checkbox = QCheckBox("Load fused scene")
+        self.fuse_checkbox.setChecked(True)
+        self.fuse_checkbox.setToolTip(
+            "Load the images of an OME-Zarr 0.6 scene (e.g. tiles) as a "
+            "single layer per channel and label image, instead of separate "
+            "layers per image. This is much faster for scenes with many "
+            "images. Applies when loading."
+        )
+
         # Only enabled when a path is entered
         self.load_btn = QPushButton("Load OME-Zarr")
         self.load_btn.setEnabled(False)
@@ -165,6 +494,7 @@ class OMEZarrpariWidget(QWidget):
         text_row.addWidget(self.browse_btn)
         layout.addLayout(text_row)
 
+        layout.addWidget(self.fuse_checkbox)
         layout.addWidget(self.load_btn)
         layout.addWidget(self.status_text)
 
@@ -266,12 +596,10 @@ class OMEZarrpariWidget(QWidget):
             return
 
         if isinstance(data, ome_zarr_models.v06.Scene):
-            scene = _load_ome_zarr_scene(
-                self.viewer, group, data, visible=visible
+            self._set_scene(
+                _read_ome_zarr_scene(self.viewer, group, data, visible=visible)
             )
-            for layers in scene.layers.values():
-                self.added_layers.update(layers)
-            self._set_scene(scene)
+            self._show_scene(fused=self.fuse_checkbox.isChecked())
         else:
             added_layers = _load_ome_zarr_image(
                 self.viewer,
@@ -380,15 +708,24 @@ class OMEZarrpariWidget(QWidget):
         )
         self.scene = scene
 
-    def _on_coord_system_changed(self, coordinate_system: str) -> None:
-        if self.scene is None or not coordinate_system:
+    def _show_scene(self, *, fused: bool | None = None) -> None:
+        """
+        Show the current scene in the selected coordinate system, fused or
+        not (by default, as the scene is currently shown).
+        """
+        if self.scene is None:
             return
-        # Skip layers that were removed from the viewer
-        for layers in self.scene.layers.values():
-            for layer in list(layers):
-                if layer not in self.viewer.layers:
-                    del layers[layer]
-        self.scene.set_coordinate_system(coordinate_system)
+        if fused is None:
+            fused = bool(self.scene.fused)
+        coordinate_system = self.coord_system_dropdown.currentText() or None
+        removed, added = self.scene.show(coordinate_system, fused=fused)
+        for layer in removed:
+            self.added_layers.pop(layer, None)
+        self.added_layers.update(added)
+
+    def _on_coord_system_changed(self, coordinate_system: str) -> None:
+        if coordinate_system:
+            self._show_scene()
 
 
 def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
@@ -565,13 +902,17 @@ def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:
 
 
 def load_ome_zarr(
-    viewer: "napari.Viewer", group: zarr.Group, *, visible: bool = True
+    viewer: "napari.Viewer",
+    group: zarr.Group,
+    *,
+    visible: bool = True,
+    fuse_scenes: bool = False,
 ) -> AddedLayers:
     """
     Load an OME-Zarr file into a napari viewer.
 
-    The images of an OME-Zarr 0.6 scene are each loaded as separate layers,
-    placed in the first coordinate system of the scene.
+    The images of an OME-Zarr 0.6 scene are placed in the first coordinate
+    system of the scene.
 
     Parameters
     ----------
@@ -581,6 +922,9 @@ def load_ome_zarr(
         Open OME-Zarr group.
     visible : bool
         Set visible status of any created napari layers.
+    fuse_scenes : bool
+        Fuse the images of an OME-Zarr 0.6 scene into one layer per channel
+        and label image, instead of separate layers per image.
 
     Returns
     -------
@@ -595,16 +939,17 @@ def load_ome_zarr(
         )
 
     if isinstance(data, ome_zarr_models.v06.Scene):
-        scene = _load_ome_zarr_scene(viewer, group, data, visible=visible)
-        added_layers: AddedLayers = {}
-        for layers in scene.layers.values():
-            added_layers.update(layers)
+        scene = _read_ome_zarr_scene(viewer, group, data, visible=visible)
+        coordinate_system = (
+            scene.coordinate_systems[0] if scene.coordinate_systems else None
+        )
+        _, added_layers = scene.show(coordinate_system, fused=fuse_scenes)
         return added_layers
 
     return _load_ome_zarr_image(viewer, group, data, visible=visible)
 
 
-def _load_ome_zarr_scene(
+def _read_ome_zarr_scene(
     viewer: "napari.Viewer",
     zarr_group: zarr.Group,
     scene: ome_zarr_models.v06.Scene,
@@ -612,13 +957,18 @@ def _load_ome_zarr_scene(
     visible: bool = True,
 ) -> LoadedScene:
     """
-    Load the images of an OME-Zarr 0.6 scene on to the napari viewer,
-    placed in the first coordinate system of the scene.
+    Read the images of an OME-Zarr 0.6 scene, without adding them to the
+    viewer yet.
     """
     graph = SceneGraph(scene)
-    layers = {
-        path: _load_ome_zarr_image(
-            viewer,
+    if not graph.coordinate_systems:
+        warnings.warn(
+            "Scene has no coordinate systems, showing each image in its "
+            "intrinsic coordinate system.",
+            stacklevel=2,
+        )
+    specs = {
+        path: _image_layer_specs(
             zarr.open_group(zarr_group.store_path / path, mode="r"),
             image,
             visible=visible,
@@ -626,16 +976,8 @@ def _load_ome_zarr_scene(
         )
         for path, image in graph.images.items()
     }
-    loaded_scene = LoadedScene(graph=graph, layers=layers)
-    if graph.coordinate_systems:
-        loaded_scene.set_coordinate_system(graph.coordinate_systems[0])
-    else:
-        warnings.warn(
-            "Scene has no coordinate systems, showing each image in its "
-            "intrinsic coordinate system.",
-            stacklevel=2,
-        )
-    return loaded_scene
+    name = str(zarr_group.store_path).rstrip("/").split("/")[-1] or "scene"
+    return LoadedScene(viewer, name, graph, specs)
 
 
 def _load_ome_zarr_image(
@@ -644,37 +986,50 @@ def _load_ome_zarr_image(
     image: AnyImage | AnyImageLabel,
     *,
     visible: bool = True,
-    name: str | None = None,
     layer_multiscales: dict[napari.layers.Layer, AnyMultiscale] | None = None,
 ) -> AddedLayers:
     """
     Load an OME-Zarr image on to the napari viewer.
 
-    If name is given, it is used as the name of the image layers, and as a
-    prefix for the names of the label layers.
-
     If given, ``layer_multiscales`` is updated with the multiscale image each
     added layer was created from.
     """
-    if layer_multiscales is None:
-        layer_multiscales = {}
+    added_layers: AddedLayers = {}
+    for spec in _image_layer_specs(zarr_group, image, visible=visible):
+        layers = spec.add_to(viewer)
+        added_layers.update(layers)
+        if layer_multiscales is not None:
+            layer_multiscales.update(dict.fromkeys(layers, spec.multiscale))
+    return added_layers
+
+
+def _image_layer_specs(
+    zarr_group: zarr.Group,
+    image: AnyImage | AnyImageLabel,
+    *,
+    visible: bool = True,
+    name: str | None = None,
+) -> list[LayerSpec]:
+    """
+    Get the layers of an OME-Zarr image, including its labels.
+
+    If name is given, it is used as the name of the image layers, and as a
+    prefix for the names of the label layers.
+    """
     layer_type: Literal["image", "labels"] = (
         "image" if isinstance(image, AnyImage) else "labels"
     )
-    added_layers: AddedLayers = {}
-    # Add all the images
-    for multiscale in image.ome_attributes.multiscales:
-        layer = _add_multiscale_layer(
-            viewer,
+    specs = [
+        _multiscale_layer_spec(
             multiscale,
             zarr_group,
+            image,
             layer_type=layer_type,
             visible=visible,
             name=name,
         )
-        for layer_ in layer if isinstance(layer, list) else [layer]:
-            added_layers[layer_] = image
-            layer_multiscales[layer_] = multiscale
+        for multiscale in image.ome_attributes.multiscales
+    ]
 
     # Check for labels
     if isinstance(image, AnyImage) and (labels := image.labels) is not None:
@@ -690,35 +1045,36 @@ def _load_ome_zarr_image(
             image_labels = image_label_cls.from_zarr(image_label_group)
             for multiscale in image_labels.ome_attributes.multiscales:
                 # TODO: correctly assign color from the label metdaata
-                layer = _add_multiscale_layer(
-                    viewer,
-                    multiscale,
-                    image_label_group,
-                    layer_type="labels",
-                    visible=visible,
-                    name=None if name is None else f"{name}: {path}",
+                specs.append(
+                    _multiscale_layer_spec(
+                        multiscale,
+                        image_label_group,
+                        image_labels,
+                        layer_type="labels",
+                        visible=visible,
+                        name=None if name is None else f"{name}: {path}",
+                        label=path,
+                    )
                 )
-                added_layers[layer] = image_labels
-                layer_multiscales[layer] = multiscale
 
-    return added_layers
+    return specs
 
 
-def _add_multiscale_layer(
-    viewer: "napari.Viewer",
+def _multiscale_layer_spec(
     multiscale: AnyMultiscale,
     zarr_group: zarr.Group,
+    model: AnyImage | AnyImageLabel,
     *,
     layer_type: Literal["image", "labels"],
     visible: bool = True,
     name: str | None = None,
-) -> napari.layers.Image | list[napari.layers.Image] | napari.layers.Labels:
+    label: str | None = None,
+) -> LayerSpec:
     """
-    Add a OME-Zarr multiscales dataset to the napari viewer.
+    Get the layer of a OME-Zarr multiscales dataset.
 
     The layer is named after the multiscale, unless name is given.
     """
-    layer_name = multiscale.name if name is None else name
     arrays = [
         da.from_array(
             zarr.open_array(
@@ -731,6 +1087,10 @@ def _add_multiscale_layer(
     axis_labels = _get_axis_names(multiscale)
     axis_units = _get_axis_units(multiscale)
     scale, translation = _get_scale_translation(multiscale)
+    kwargs: dict[str, Any] = {
+        "name": multiscale.name if name is None else name,
+        "visible": visible,
+    }
     if layer_type == "image":
         channel_axis = _get_channel_axis(multiscale)
         # If there's a channel axis, remove the associated label/units/scale
@@ -740,26 +1100,19 @@ def _add_multiscale_layer(
             if axis_labels is not None:
                 axis_labels.pop(channel_axis)
             axis_units.pop(channel_axis)
+        kwargs["channel_axis"] = channel_axis
 
-        return viewer.add_image(
-            arrays,
-            name=layer_name,
-            multiscale=True,
-            visible=visible,
-            axis_labels=axis_labels,
-            channel_axis=channel_axis,
-            units=axis_units,
-            scale=scale,
-            translate=translation,
-        )
-    else:
-        return viewer.add_labels(
-            arrays,
-            name=layer_name,
-            multiscale=True,
-            visible=visible,
-            axis_labels=axis_labels,
-            units=axis_units,
-            scale=scale,
-            translate=translation,
-        )
+    kwargs.update(
+        axis_labels=axis_labels,
+        units=axis_units,
+        scale=scale,
+        translate=translation,
+    )
+    return LayerSpec(
+        data=arrays,
+        layer_type=layer_type,
+        kwargs=kwargs,
+        model=model,
+        label=label,
+        multiscale=multiscale,
+    )

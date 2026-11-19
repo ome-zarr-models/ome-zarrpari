@@ -31,6 +31,19 @@ Only transformations that can be converted to an affine transformation are suppo
 Images that can't be placed in the selected scene coordinate system are shown in their
 own (intrinsic) coordinate system, with a warning.
 
+Scenes with many images (e.g. hundreds of tiles) are slow to show as separate layers,
+so by default ("Load fused scene", ticked) the scene images are fused into a single
+layer per channel and per label image.
+Untick "Load fused scene" before loading to show each scene image as separate layers.
+Fused layers are lazy: only the parts you look at are read and fused.
+Images that are only shifted are copied (rounded to whole pixels); rotated or scaled
+images are resampled.
+Where images overlap, the fused image shows the maximum value, and fused labels show
+the last non-zero label.
+Images with different data types are fused into separate layers.
+The checkbox applies when loading; the coordinate system dropdown re-shows the most
+recently loaded scene.
+
 ### Programmatic usage
 If you already have a Zarr group you want to add to a napari Viewer, you can use:
 
@@ -85,6 +98,9 @@ The image at index `i` is downsampled by a factor of `2**i`.
   Note that OME-Zarr 0.6 support in `ome-zarr-models` is still in beta.
 - Add support for loading OME-Zarr 0.6 scenes.
   Scene images are placed in a scene coordinate system, which can be selected in the widget.
+- Add an option to fuse the images of a scene into one layer per channel and label image,
+  for fast viewing of scenes with many images
+  (`fuse_scenes` in `load_ome_zarr`, and the "Load fused scene" checkbox in the widget, on by default).
 - Apply the translation of the highest resolution dataset to the loaded layers
   (previously only the scale was applied).
 - Axes without a unit get the napari default unit ('pixel'), as in napari-ome-zarr

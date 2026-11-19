@@ -2,6 +2,7 @@
 Tests for loading OME-Zarr 0.6 data, using small synthetic datasets.
 """
 
+import napari.layers
 import numpy as np
 import ome_zarr_models.v06
 import pytest
@@ -13,7 +14,11 @@ from ome_zarr_models.v06.coordinate_transforms import (
 )
 
 from ome_zarrpari._scene import SceneGraph, to_napari_affine
-from ome_zarrpari._widget import OMEZarrpariWidget, load_ome_zarr
+from ome_zarrpari._widget import (
+    OMEZarrpariWidget,
+    _channel_display,
+    load_ome_zarr,
+)
 
 SCALE = (0.5, 0.25)
 TRANSLATION = (10.0, 20.0)
@@ -80,7 +85,11 @@ N_LEVELS = 2
 
 
 def _write_v06_image(
-    group: zarr.Group, name: str, *, with_labels: bool = True
+    group: zarr.Group,
+    name: str,
+    *,
+    with_labels: bool = True,
+    dtype: str = "uint16",
 ) -> None:
     """
     Write a 2-channel OME-Zarr 0.6 image to a group, optionally with
@@ -90,7 +99,7 @@ def _write_v06_image(
         "version": "0.6",
         "multiscales": [_multiscale_attrs(name, CHANNEL_AXES, N_LEVELS)],
     }
-    _write_multiscale(group, (2, 32, 64), "uint16", N_LEVELS)
+    _write_multiscale(group, (2, 32, 64), dtype, N_LEVELS)
     if not with_labels:
         return
 
@@ -312,6 +321,7 @@ def _write_v06_scene(
     transforms: list[dict],
     tiles: tuple[str, ...],
     coordinate_systems: tuple[str, ...] = ("world", "rotated"),
+    dtypes: dict[str, str] | None = None,
 ) -> str:
     """
     Write an OME-Zarr 0.6 scene with the given image tiles, and (c, y, x)
@@ -330,7 +340,10 @@ def _write_v06_scene(
     }
     for tile in tiles:
         _write_v06_image(
-            root.create_group(tile), "my_image", with_labels=tile == "tile0"
+            root.create_group(tile),
+            "my_image",
+            with_labels=tile == "tile0",
+            dtype=(dtypes or {}).get(tile, "uint16"),
         )
     return str(path)
 
@@ -383,6 +396,7 @@ def _affine_translation(layer) -> tuple[float, ...]:
 def test_load_v06_scene(make_napari_viewer, v06_scene_path) -> None:
     viewer = make_napari_viewer()
     widget = OMEZarrpariWidget(viewer)
+    widget.fuse_checkbox.setChecked(False)
     widget._load_ome_zarr(v06_scene_path, visible=False)
     assert widget.load_pane_status_text == "Successfully loaded"
 
@@ -470,6 +484,7 @@ def test_load_v06_scene_non_affine_transform(
     )
     viewer = make_napari_viewer()
     widget = OMEZarrpariWidget(viewer)
+    widget.fuse_checkbox.setChecked(False)
     with pytest.warns(UserWarning) as record:
         widget._load_ome_zarr(path, visible=False)
     messages = [str(warning.message) for warning in record]
@@ -491,6 +506,10 @@ def test_load_v06_scene_non_affine_transform(
         viewer.layers["tile1"].affine.affine_matrix, np.eye(3)
     )
 
+    # There are no transforms to the 'rotated' coordinate system
+    with pytest.warns(UserWarning, match=r"Could not place layers .*'tile1'"):
+        widget.coord_system_dropdown.setCurrentText("rotated")
+
 
 def test_load_v06_scene_layer_removed(
     make_napari_viewer, v06_scene_path
@@ -500,14 +519,14 @@ def test_load_v06_scene_layer_removed(
     """
     viewer = make_napari_viewer()
     widget = OMEZarrpariWidget(viewer)
+    widget.fuse_checkbox.setChecked(False)
     widget._load_ome_zarr(v06_scene_path, visible=False)
     viewer.layers.remove("tile1")
 
     widget.coord_system_dropdown.setCurrentText("rotated")
     assert widget.scene is not None
-    assert [layer.name for layer in widget.scene.layers["tile1"]] == [
-        "tile1 [1]"
-    ]
+    assert "tile1" not in [layer.name for layer in widget.scene.layers]
+    assert "tile1" not in [layer.name for layer in widget.added_layers]
     np.testing.assert_allclose(
         viewer.layers["tile1 [1]"].affine.linear_matrix, [[0, -1], [1, 0]]
     )
@@ -537,6 +556,7 @@ def test_load_v06_scene_coordinate_systems(
     )
     viewer = make_napari_viewer()
     widget = OMEZarrpariWidget(viewer)
+    widget.fuse_checkbox.setChecked(False)
     if coordinate_systems:
         widget._load_ome_zarr(path, visible=False)
         expected_translation = (0, 100)
@@ -723,3 +743,221 @@ def test_load_ome_zarr_image(make_napari_viewer, v06_image_path) -> None:
         "my_image [1]",
         "cells",
     ]
+
+
+# Fused scenes
+
+
+def _tile_data(scene_path: str, tile: str, channel: int | None) -> np.ndarray:
+    root = zarr.open_group(scene_path, mode="r")
+    if channel is None:
+        return root[tile]["labels"]["cells"]["0"][:]
+    return root[tile]["0"][channel]
+
+
+def test_load_v06_scene_fused(make_napari_viewer, v06_scene_path) -> None:
+    viewer = make_napari_viewer()
+    widget = OMEZarrpariWidget(viewer)
+    # Fused by default
+    assert widget.fuse_checkbox.isChecked()
+    widget._load_ome_zarr(v06_scene_path, visible=False)
+    assert widget.load_pane_status_text == "Successfully loaded"
+
+    # A layer per channel, and per label image
+    assert [layer.name for layer in viewer.layers] == [
+        "scene.ome.zarr [0]",
+        "scene.ome.zarr [1]",
+        "scene.ome.zarr: cells",
+    ]
+    assert set(widget.added_layers) == set(viewer.layers)
+    image_0, image_1, labels = viewer.layers
+    assert [layer.colormap.name for layer in (image_0, image_1)] == [
+        "magenta",
+        "green",
+    ]
+    assert isinstance(labels, napari.layers.Labels)
+
+    # The tiles are at (5, 0), (0, 100) and (-50, -50) in world, plus their
+    # intrinsic translation; so in fused pixels (with the intrinsic pixel
+    # size) at (110, 200), (100, 600) and (0, 0)
+    for layer in viewer.layers:
+        assert len(layer.data) == N_LEVELS
+        np.testing.assert_allclose(layer.affine.affine_matrix, np.eye(3))
+        np.testing.assert_allclose(layer.scale, SCALE)
+    np.testing.assert_allclose(image_0.translate, (-40, -30))
+    for channel, layer in enumerate((image_0, image_1)):
+        fused = layer.data[0].compute()
+        assert fused.shape == (142, 664)
+        for tile, (y, x) in {
+            "tile0": (110, 200),
+            "tile1": (100, 600),
+            "tile2": (0, 0),
+        }.items():
+            np.testing.assert_array_equal(
+                fused[y : y + 32, x : x + 64],
+                _tile_data(v06_scene_path, tile, channel),
+            )
+    # Only tile0 has labels
+    np.testing.assert_allclose(labels.translate, (15, 20))
+    np.testing.assert_array_equal(
+        labels.data[0].compute(), _tile_data(v06_scene_path, "tile0", None)
+    )
+
+    # Switching the coordinate system replaces the fused layers
+    widget.coord_system_dropdown.setCurrentText("rotated")
+    assert len(viewer.layers) == 3
+    assert set(widget.added_layers) == set(viewer.layers)
+    # Rotated by 90 degrees: the fused pixel size is swapped too
+    assert viewer.layers[0].data[0].shape == (664, 142)
+    np.testing.assert_allclose(viewer.layers[0].scale, SCALE[::-1])
+
+    # The checkbox only applies when loading
+    widget.fuse_checkbox.setChecked(False)
+    assert len(viewer.layers) == 3
+
+    # Loading unfused shows separate layers, in the selected coordinate
+    # system; switching the coordinate system keeps them separate
+    viewer.layers.clear()
+    widget._load_ome_zarr(v06_scene_path, visible=False)
+    assert len(viewer.layers) == 7
+    widget.coord_system_dropdown.setCurrentText("rotated")
+    assert len(viewer.layers) == 7
+    assert set(viewer.layers) <= set(widget.added_layers)
+    np.testing.assert_allclose(
+        viewer.layers["tile1"].affine.linear_matrix, [[0, -1], [1, 0]]
+    )
+
+
+def test_load_v06_scene_fused_non_affine_transform(
+    make_napari_viewer, tmp_path
+) -> None:
+    """
+    Images that can't be placed are shown as separate layers when fusing.
+    """
+    transforms = [
+        _translation(
+            [0, 0, 100],
+            source={"path": "tile0", "name": "physical"},
+            target={"name": "world"},
+        ),
+        {
+            "type": "byDimension",
+            "transformations": [
+                {
+                    "transformation": {
+                        "type": "translation",
+                        "translation": [100],
+                    },
+                    "inputAxes": [2],
+                    "outputAxes": [2],
+                }
+            ],
+            "input": {"path": "tile1", "name": "physical"},
+            "output": {"name": "world"},
+        },
+    ]
+    path = _write_v06_scene(
+        tmp_path / "scene.ome.zarr", transforms, ("tile0", "tile1")
+    )
+    viewer = make_napari_viewer()
+    with pytest.warns(UserWarning) as record:
+        load_ome_zarr(
+            viewer,
+            zarr.open_group(path, mode="r"),
+            visible=False,
+            fuse_scenes=True,
+        )
+    assert str(record[-1].message).startswith(
+        "Could not place layers ['tile1', 'tile1 [1]']"
+    )
+    assert [layer.name for layer in viewer.layers] == [
+        "scene.ome.zarr [0]",
+        "scene.ome.zarr [1]",
+        "scene.ome.zarr: cells",
+        "tile1",
+        "tile1 [1]",
+    ]
+
+
+def test_load_v06_scene_fused_without_coordinate_systems(
+    make_napari_viewer, tmp_path
+) -> None:
+    """
+    Without scene coordinate systems, images are fused in their intrinsic
+    coordinate systems.
+    """
+    transforms = [
+        _translation(
+            [0, 0, 100],
+            source={"path": "tile0", "name": "physical"},
+            target={"name": "world"},
+        ),
+        _translation(
+            [0, 0, 100],
+            source={"path": "tile1", "name": "physical"},
+            target={"name": "world"},
+        ),
+    ]
+    path = _write_v06_scene(
+        tmp_path / "scene.ome.zarr",
+        transforms,
+        ("tile0", "tile1"),
+        coordinate_systems=(),
+    )
+    viewer = make_napari_viewer()
+    with pytest.warns(UserWarning, match="Scene has no coordinate systems"):
+        load_ome_zarr(
+            viewer,
+            zarr.open_group(path, mode="r"),
+            visible=False,
+            fuse_scenes=True,
+        )
+    image_0 = viewer.layers["scene.ome.zarr [0]"]
+    np.testing.assert_allclose(image_0.translate, TRANSLATION)
+    assert image_0.data[0].shape == (32, 64)
+
+
+def test_load_v06_scene_fused_dtypes(make_napari_viewer, tmp_path) -> None:
+    """
+    Images with different dtypes are fused separately.
+    """
+    transforms = [
+        _translation(
+            [0, 0, 100 * i],
+            source={"path": tile, "name": "physical"},
+            target={"name": "world"},
+        )
+        for i, tile in enumerate(("tile0", "tile1", "tile2"))
+    ]
+    path = _write_v06_scene(
+        tmp_path / "scene.ome.zarr",
+        transforms,
+        ("tile0", "tile1", "tile2"),
+        dtypes={"tile1": "uint8"},
+    )
+    viewer = make_napari_viewer()
+    load_ome_zarr(
+        viewer,
+        zarr.open_group(path, mode="r"),
+        visible=False,
+        fuse_scenes=True,
+    )
+    assert [layer.name for layer in viewer.layers] == [
+        "scene.ome.zarr [0] (uint16)",
+        "scene.ome.zarr [1] (uint16)",
+        "scene.ome.zarr: cells",
+        "scene.ome.zarr [0] (uint8)",
+        "scene.ome.zarr [1] (uint8)",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("channel", "n_channels", "colormap"),
+    [(0, 1, "gray"), (1, 2, "green"), (2, 3, "yellow"), (6, 7, "cyan")],
+)
+def test_channel_display(channel, n_channels, colormap) -> None:
+    display = _channel_display(channel, n_channels)
+    assert display["colormap"] == colormap
+    assert display["blending"] == (
+        "translucent_no_depth" if channel == 0 else "additive"
+    )

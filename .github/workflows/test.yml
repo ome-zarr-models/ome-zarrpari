@@ -25,7 +25,7 @@ jobs:
       matrix:
         include:
           - platform: ubuntu-latest
-            python-version: "3.11"
+            python-version: "3.12"
           - platform: windows-latest
             python-version: "3.12"
           - platform: macos-latest

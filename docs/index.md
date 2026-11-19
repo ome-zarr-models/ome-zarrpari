@@ -73,6 +73,8 @@ The image at index `i` is downsampled by a factor of `2**i`.
   Note that OME-Zarr 0.6 support in `ome-zarr-models` is still in beta.
 - Apply the translation of the highest resolution dataset to the loaded layers
   (previously only the scale was applied).
+- Set axis units for images with a channel axis without a unit
+  (previously no units were set for these images, with a warning).
 - Require `ome-zarr-models >= 1.9`.
 - Drop support for Python 3.11, as `ome-zarr-models` no longer supports it.
 

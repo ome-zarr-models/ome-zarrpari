@@ -17,13 +17,12 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Image Processing",
 ]
 # napari doesn't support Python 3.14 yet
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.12,<3.14"
 # napari can be included in dependencies if napari imports are required.
 # However, you should not include napari[all], napari[qt],
 # or any other Qt bindings directly (e.g. PyQt5, PySide2).
@@ -31,9 +30,11 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
     "qtpy",
     "napari",
-    "ome-zarr-models>=1.0",
+    "ome-zarr-models>=1.9",
     # Not a direct dependency, but pin to avoid this bug: https://github.com/zarr-developers/pydantic-zarr/issues/147
-    "pydantic-zarr>=0.9.2",
+    # < 0.11: pydantic-zarr 0.11 removed GroupSpec.from_zarr(depth=...), which
+    # ome-zarr-models <= 1.9.0 uses (already capped on ome-zarr-models main)
+    "pydantic-zarr>=0.9.2,<0.11",
     "zarr[remote]",
     "dask[array]",
     # To enable data in Google Cloud services
@@ -95,13 +96,16 @@ addopts = [
 xfail_strict = true
 filterwarnings = [
     "error",
-    "ignore:Pickle, copy, and deepcopy support will be removed from itertools in Python 3.14:DeprecationWarning"]
+    "ignore:Pickle, copy, and deepcopy support will be removed from itertools in Python 3.14:DeprecationWarning",
+    # Raised by napari >= 0.7, which still uses the deprecated pydantic json_encoders
+    "ignore:`json_encoders` is deprecated:DeprecationWarning",
+]
 log_cli_level = "INFO"
 testpaths = ["tests"]
 
 [tool.black]
 line-length = 79
-target-version = ['py310', 'py311', 'py312', 'py313']
+target-version = ['py312', 'py313']
 
 [tool.ruff]
 line-length = 79

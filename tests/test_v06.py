@@ -134,11 +134,9 @@ def test_load_v06_image(make_napari_viewer, v06_image_path) -> None:
         ]
 
 
-def test_load_v06_image_missing_unit(
-    make_napari_viewer, v06_image_path, capsys
-) -> None:
+def test_load_v06_image_missing_unit(make_napari_viewer, v06_image_path) -> None:
     """
-    If a (non-channel) axis has no unit, no units are set.
+    Axes without a unit are given the napari default unit ('pixel').
     """
     root = zarr.open_group(v06_image_path, mode="r+")
     attrs = root.attrs.asdict()
@@ -150,11 +148,8 @@ def test_load_v06_image_missing_unit(
     widget = OMEZarrpariWidget(viewer)
     widget._load_ome_zarr(v06_image_path, visible=False)
     assert widget.load_pane_status_text == "Successfully loaded"
-    assert "At least one unit is None for multiscale 'my_image'" in (
-        capsys.readouterr().out
-    )
     for name in ("my_image", "my_image [1]"):
         assert [str(unit) for unit in viewer.layers[name].units] == [
-            "pixel",
+            "micrometer",
             "pixel",
         ]

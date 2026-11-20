@@ -188,23 +188,19 @@ def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
         return [str(label) for label in axis_labels_raw]
 
 
-def _get_axis_units(multiscale: AnyMultiscale) -> list[str] | None:
+def _get_axis_units(multiscale: AnyMultiscale) -> list[str]:
     """
     Get axis units from Multiscale metadata.
 
-    Channel axes usually have no unit; they are given the napari default unit
-    ('pixel'). If any other axis has no unit, no units are returned.
+    Axes without a unit (e.g. channel axes) are given the napari default unit
+    ('pixel'), as in napari-ome-zarr.
 
     # TODO: convert strings to pint units if they make sense as physical units
     """
-    axes = _get_axes(multiscale)
-    if any(axis.unit is None and axis.type != "channel" for axis in axes):
-        print(
-            f"Warning: At least one unit is None for multiscale '{multiscale.name}', "
-            "not setting any axis units."
-        )
-        return None
-    return ["pixel" if axis.unit is None else str(axis.unit) for axis in axes]
+    return [
+        "pixel" if axis.unit is None else str(axis.unit)
+        for axis in _get_axes(multiscale)
+    ]
 
 
 def _get_axes(multiscale: AnyMultiscale) -> Sequence[AnyAxis]:
@@ -376,8 +372,7 @@ def _add_multiscale_layer(
             translation.pop(channel_axis)
             if axis_labels is not None:
                 axis_labels.pop(channel_axis)
-            if axis_units is not None:
-                axis_units.pop(channel_axis)
+            axis_units.pop(channel_axis)
 
         return viewer.add_image(
             arrays,

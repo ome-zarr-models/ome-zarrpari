@@ -56,3 +56,12 @@ def test_load_v05_labels(make_napari_viewer, capsys) -> None:
         "Image [1]",
         "0",
     ]
+
+
+def test_load_button_needs_path(make_napari_viewer):
+    widget = OMEZarrpariWidget(make_napari_viewer())
+    assert not widget.load_btn.isEnabled()
+    widget.text_box.setText("   ")
+    assert not widget.load_btn.isEnabled()
+    widget.text_box.setText("image.ome.zarr")
+    assert widget.load_btn.isEnabled()

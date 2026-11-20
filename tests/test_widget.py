@@ -56,3 +56,27 @@ def test_load_v05_labels(make_napari_viewer, capsys) -> None:
         "Image [1]",
         "0",
     ]
+
+
+def test_load_button_needs_path(make_napari_viewer):
+    widget = OMEZarrpariWidget(make_napari_viewer())
+    assert not widget.load_btn.isEnabled()
+    widget.text_box.setText("   ")
+    assert not widget.load_btn.isEnabled()
+    widget.text_box.setText("image.ome.zarr")
+    assert widget.load_btn.isEnabled()
+
+
+def test_load_button_loads_stripped_path(make_napari_viewer, monkeypatch):
+    widget = OMEZarrpariWidget(make_napari_viewer())
+    loaded = []
+    monkeypatch.setattr(widget, "_load_ome_zarr", loaded.append)
+
+    # A blank path is ignored, even if _on_load is reached directly
+    widget.text_box.setText("   ")
+    widget._on_load()
+    assert loaded == []
+
+    widget.text_box.setText("  image.ome.zarr  ")
+    widget.load_btn.click()
+    assert loaded == ["image.ome.zarr"]

@@ -4,7 +4,7 @@ icon: lucide/rocket
 
 # ome-zarrpari
 
-Load and use OME-Zarr 0.4, 0.5 and 0.6 images and labels in napari, from any data source!
+Load and use OME-Zarr 0.4, 0.5 and 0.6 images, labels and scenes in napari, from any data source!
 
 Images are loaded into a *napari multiscale image layer*.
 This means higher resolution levels of the data are progressively loaded as you zoom in.
@@ -18,6 +18,32 @@ This is what the widget looks like:
 
 You can either copy/paste a URL or local path into the text box, or press "Browse" to open a file browser and select a local directory.
 Then press the "Load OME-Zarr" button to load the image.
+This first removes the layers previously loaded by the plugin; other layers are kept.
+
+### Scenes
+OME-Zarr 0.6 scenes combine several images (e.g. tiles) with coordinate transformations
+that place them in shared scene coordinate systems.
+Each scene image is loaded as separate layers, named after its path in the scene,
+and placed in the first coordinate system of the scene.
+If the scene has more than one coordinate system, you can switch between them with the
+"Scene coordinate system" dropdown, which applies to the most recently loaded scene.
+
+Only transformations that can be converted to an affine transformation are supported.
+Images that can't be placed in the selected scene coordinate system are shown in their
+own (intrinsic) coordinate system, with a warning.
+
+Scenes with many images (e.g. hundreds of tiles) are slow to show as separate layers.
+Tick "Load fused scene" before loading to fuse the scene images into a single
+layer per channel and per label image.
+By default each scene image is shown as separate layers.
+Fused layers are lazy: only the parts you look at are read and fused.
+Images that are only shifted are copied (rounded to whole pixels); rotated or scaled
+images are resampled.
+Where images overlap, the fused image shows the maximum value, and fused labels show
+the last non-zero label.
+Images with different data types are fused into separate layers.
+The checkbox applies when loading; the coordinate system dropdown re-shows the most
+recently loaded scene.
 
 ### Programmatic usage
 If you already have a Zarr group you want to add to a napari Viewer, you can use:
@@ -71,6 +97,15 @@ The image at index `i` is downsampled by a factor of `2**i`.
 - Add support for loading OME-Zarr 0.6 images and labels.
   Images are loaded in their intrinsic physical coordinate system.
   Note that OME-Zarr 0.6 support in `ome-zarr-models` is still in beta.
+- Add support for loading OME-Zarr 0.6 scenes.
+  Scene images are placed in a scene coordinate system, which can be selected in the widget.
+- Pressing "Load OME-Zarr" first removes the layers previously loaded by the plugin.
+- Switching the scene coordinate system, and reloading with "Load OME-Zarr", keeps the current view.
+- Adding and removing many layers (e.g. the images of a scene) is much faster.
+- Require napari >= 0.9.
+- Add an option to fuse the images of a scene into one layer per channel and label image,
+  for fast viewing of scenes with many images
+  (`fuse_scenes` in `load_ome_zarr`, and the "Load fused scene" checkbox in the widget, off by default).
 - Apply the translation of the highest resolution dataset to the loaded layers
   (previously only the scale was applied).
 - Axes without a unit get the napari default unit ('pixel'), as in napari-ome-zarr

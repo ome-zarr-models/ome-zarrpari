@@ -85,8 +85,13 @@ class OMEZarrpariWidget(QWidget):
         self.browse_btn = QPushButton("Browse")
         self.browse_btn.clicked.connect(self._on_browse)
 
-        btn = QPushButton("Load OME-Zarr")
-        btn.clicked.connect(self._on_load)
+        # Only enabled when a path is entered
+        self.load_btn = QPushButton("Load OME-Zarr")
+        self.load_btn.setEnabled(False)
+        self.load_btn.clicked.connect(self._on_load)
+        self.text_box.textChanged.connect(
+            lambda text: self.load_btn.setEnabled(bool(text.strip()))
+        )
 
         # Create label for status messages
         self.status_text = QLabel("")
@@ -100,7 +105,7 @@ class OMEZarrpariWidget(QWidget):
         text_row.addWidget(self.browse_btn)
         layout.addLayout(text_row)
 
-        layout.addWidget(btn)
+        layout.addWidget(self.load_btn)
         layout.addWidget(self.status_text)
 
         # Coordinate system of the selected image (OME-Zarr 0.6)
@@ -138,8 +143,9 @@ class OMEZarrpariWidget(QWidget):
         return self.status_text.text()
 
     def _on_load(self) -> None:
-        path = self.text_box.text()
-        self._load_ome_zarr(path)
+        path = self.text_box.text().strip()
+        if path:
+            self._load_ome_zarr(path)
 
     def _on_browse(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")

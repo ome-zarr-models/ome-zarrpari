@@ -18,6 +18,7 @@ from ome_zarr_models.common.coordinate_transformations import (
     VectorTranslation,
 )
 from qtpy.QtWidgets import (
+    QComboBox,
     QFileDialog,
     QHBoxLayout,
     QLineEdit,
@@ -25,6 +26,8 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from ome_zarrpari._transforms import TransformGraph, to_napari_affine
 
 if TYPE_CHECKING:
     import napari
@@ -69,6 +72,10 @@ class OMEZarrpariWidget(QWidget):
         self.viewer = viewer
         # Keep track of layers added by this widget
         self.added_layers = {}
+        # Multiscale image each added layer was created from
+        self._layer_multiscales: dict[napari.layers.Layer, AnyMultiscale] = {}
+        # Coordinate system each added layer is shown in, if not intrinsic
+        self._layer_coordinate_systems: dict[napari.layers.Layer, str] = {}
 
         # Create text box and button
         self.text_box = QLineEdit()
@@ -95,6 +102,23 @@ class OMEZarrpariWidget(QWidget):
 
         layout.addWidget(btn)
         layout.addWidget(self.status_text)
+
+        # Coordinate system of the selected image (OME-Zarr 0.6)
+        layout.addWidget(QLabel("Image coordinate system"))
+        self.image_coord_system_dropdown = QComboBox()
+        self.image_coord_system_dropdown.setEnabled(False)
+        self.image_coord_system_dropdown.setToolTip(
+            "Coordinate system to show the selected OME-Zarr 0.6 image in. "
+            "Applies to all layers (channels) of the image."
+        )
+        self.image_coord_system_dropdown.currentTextChanged.connect(
+            self._on_image_coord_system_changed
+        )
+        layout.addWidget(self.image_coord_system_dropdown)
+        self.viewer.layers.selection.events.changed.connect(
+            self._on_layer_selection_changed
+        )
+
         layout.addStretch(100)  # Push everything to the top
 
         self.napari_async_button = QPushButton("Enable napari async")
@@ -167,10 +191,99 @@ class OMEZarrpariWidget(QWidget):
             return
 
         added_layers = _load_ome_zarr_image(
-            self.viewer, group, data, visible=visible
+            self.viewer,
+            group,
+            data,
+            visible=visible,
+            layer_multiscales=self._layer_multiscales,
         )
         self.added_layers.update(added_layers)
         self.status_text.setText("Successfully loaded")
+        self._on_layer_selection_changed()
+
+    def _image_layers_of_selection(self) -> list[napari.layers.Layer]:
+        """
+        All layers of the multiscale image of the selected layer, if a single
+        layer added by this widget is selected.
+        """
+        selected = list(self.viewer.layers.selection)
+        if len(selected) != 1 or selected[0] not in self._layer_multiscales:
+            return []
+        multiscale = self._layer_multiscales[selected[0]]
+        return [
+            layer
+            for layer, layer_multiscale in self._layer_multiscales.items()
+            if layer_multiscale is multiscale and layer in self.viewer.layers
+        ]
+
+    def _on_layer_selection_changed(self, event=None) -> None:
+        """
+        Show the coordinate systems of the selected image in the dropdown.
+        """
+        layers = self._image_layers_of_selection()
+        names = (
+            _get_coordinate_systems(self._layer_multiscales[layers[0]])
+            if layers
+            else []
+        )
+        dropdown = self.image_coord_system_dropdown
+        dropdown.blockSignals(True)
+        dropdown.clear()
+        dropdown.addItems(names)
+        if names:
+            dropdown.setCurrentText(
+                self._layer_coordinate_systems.get(layers[0], names[0])
+            )
+        dropdown.setEnabled(len(names) > 1)
+        dropdown.blockSignals(False)
+
+    def _on_image_coord_system_changed(self, coordinate_system: str) -> None:
+        layers = self._image_layers_of_selection()
+        if coordinate_system and layers:
+            self._set_coordinate_system(layers, coordinate_system)
+
+    def _set_coordinate_system(
+        self, layers: list[napari.layers.Layer], coordinate_system: str
+    ) -> None:
+        """
+        Show the layers of a multiscale image in one of its coordinate
+        systems.
+        """
+        multiscale = self._layer_multiscales[layers[0]]
+        placements = [
+            _get_coordinate_system_placement(
+                multiscale,
+                coordinate_system,
+                channel_axis=(
+                    _get_channel_axis(multiscale)
+                    if isinstance(layer, napari.layers.Image)
+                    else None
+                ),
+            )
+            for layer in layers
+        ]
+        valid_placements = [p for p in placements if p is not None]
+        if len(valid_placements) != len(placements):
+            self.status_text.setText(
+                f"Can't show '{multiscale.name}' in coordinate system "
+                f"'{coordinate_system}': it has no affine transform from the "
+                "intrinsic coordinate system that leaves the channel axis "
+                "unchanged."
+            )
+            self._on_layer_selection_changed()
+            return
+        for layer, (affine, axis_labels, axis_units) in zip(
+            layers, valid_placements, strict=True
+        ):
+            layer.affine = affine
+            if axis_labels is not None:
+                layer.axis_labels = axis_labels
+            layer.units = axis_units
+            self._layer_coordinate_systems[layer] = coordinate_system
+        self.status_text.setText(
+            f"Showing '{multiscale.name}' in coordinate system "
+            f"'{coordinate_system}'"
+        )
 
 
 def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
@@ -210,6 +323,100 @@ def _get_axes(multiscale: AnyMultiscale) -> Sequence[AnyAxis]:
     if isinstance(multiscale, ome_zarr_models.v06.multiscales.Multiscale):
         return multiscale.intrinsic_coordinate_system.axes
     return multiscale.axes
+
+
+def _coordinate_system_graph(
+    multiscale: ome_zarr_models.v06.multiscales.Multiscale,
+) -> TransformGraph:
+    """
+    Graph of the coordinate systems of a multiscale image, connected by its
+    coordinate transformations.
+
+    Transformations to coordinate systems of other images (with an output
+    path) are not included.
+    """
+    graph: TransformGraph = TransformGraph()
+    for transform in multiscale.coordinateTransformations or ():
+        if transform.output is not None and transform.output.path:
+            continue
+        graph.add_transform(
+            transform,
+            transform.input.name if transform.input else None,
+            transform.output.name if transform.output else None,
+        )
+    return graph
+
+
+def _get_coordinate_systems(multiscale: AnyMultiscale) -> list[str]:
+    """
+    Names of the coordinate systems a multiscale image can be shown in,
+    starting with its intrinsic coordinate system.
+
+    Only OME-Zarr 0.6 images have multiple coordinate systems; for earlier
+    versions this is empty.
+    """
+    if not isinstance(multiscale, ome_zarr_models.v06.multiscales.Multiscale):
+        return []
+    intrinsic = multiscale.intrinsic_coordinate_system.name
+    graph = _coordinate_system_graph(multiscale)
+    return [intrinsic] + [
+        cs.name
+        for cs in multiscale.coordinateSystems
+        if cs.name != intrinsic
+        and graph.find_matrix(intrinsic, cs.name) is not None
+    ]
+
+
+def _get_coordinate_system_placement(
+    multiscale: AnyMultiscale,
+    coordinate_system: str,
+    *,
+    channel_axis: int | None,
+) -> tuple[np.ndarray, list[str] | None, list[str]] | None:
+    """
+    Napari affine, axis labels and axis units of a layer of a multiscale
+    image, to show it in one of the image's coordinate systems.
+
+    The affine maps the intrinsic coordinate system of the image (in which
+    the layer scale and translation are defined) to the coordinate system.
+    The channel axis, if any, is removed.
+
+    Returns None if the image can't be shown in the coordinate system.
+    """
+    if not isinstance(multiscale, ome_zarr_models.v06.multiscales.Multiscale):
+        return None
+    intrinsic = multiscale.intrinsic_coordinate_system.name
+    matrix: np.ndarray | None
+    if coordinate_system == intrinsic:
+        matrix = np.eye(multiscale.ndim + 1)
+    else:
+        matrix = _coordinate_system_graph(multiscale).find_matrix(
+            intrinsic, coordinate_system
+        )
+        if matrix is None:
+            return None
+    affine = to_napari_affine(matrix, channel_axis)
+    if affine is None:
+        return None
+
+    (cs,) = [
+        cs
+        for cs in multiscale.coordinateSystems
+        if cs.name == coordinate_system
+    ]
+    axes = list(cs.axes)
+    if channel_axis is not None:
+        axes.pop(channel_axis)
+    names = [axis.name for axis in axes]
+    axis_labels = (
+        None
+        if any(name is None for name in names)
+        else [str(n) for n in names]
+    )
+    axis_units = [
+        "pixel" if axis.unit is None else str(axis.unit) for axis in axes
+    ]
+    return affine, axis_labels, axis_units
 
 
 def _get_scale_translation(
@@ -290,12 +497,18 @@ def _load_ome_zarr_image(
     image: AnyImage | AnyImageLabel,
     *,
     visible: bool = True,
+    layer_multiscales: dict[napari.layers.Layer, AnyMultiscale] | None = None,
 ) -> dict[
     napari.layers.Image | napari.layers.Labels, AnyImage | AnyImageLabel
 ]:
     """
     Load an OME-Zarr image on to the napari viewer.
+
+    If given, ``layer_multiscales`` is updated with the multiscale image each
+    added layer was created from.
     """
+    if layer_multiscales is None:
+        layer_multiscales = {}
     layer_type: Literal["image", "labels"] = (
         "image" if isinstance(image, AnyImage) else "labels"
     )
@@ -309,11 +522,9 @@ def _load_ome_zarr_image(
             layer_type=layer_type,
             visible=visible,
         )
-        if isinstance(layer, list):
-            for layer_ in layer:
-                added_layers[layer_] = image
-        else:
-            added_layers[layer] = image
+        for layer_ in layer if isinstance(layer, list) else [layer]:
+            added_layers[layer_] = image
+            layer_multiscales[layer_] = multiscale
 
     # Check for labels
     if isinstance(image, AnyImage) and (labels := image.labels) is not None:
@@ -337,6 +548,7 @@ def _load_ome_zarr_image(
                     visible=visible,
                 )
                 added_layers[layer] = image_labels
+                layer_multiscales[layer] = multiscale
 
     return added_layers
 

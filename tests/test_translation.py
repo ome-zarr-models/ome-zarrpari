@@ -67,3 +67,8 @@ def test_scale_translation(make_napari_viewer, tmp_path, version) -> None:
     (layer,) = viewer.layers
     np.testing.assert_allclose(layer.scale, SCALE)
     np.testing.assert_allclose(layer.translate, TRANSLATION)
+
+    # Only OME-Zarr 0.6 images can have multiple coordinate systems
+    viewer.layers.selection.active = layer
+    assert widget.image_coord_system_dropdown.count() == 0
+    assert not widget.image_coord_system_dropdown.isEnabled()

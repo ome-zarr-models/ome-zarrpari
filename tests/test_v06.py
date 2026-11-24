@@ -1029,3 +1029,29 @@ def test_switch_scene_coordinate_system_keeps_view(
     assert widget.coord_system_dropdown.currentText() == "rotated"
     np.testing.assert_allclose(viewer.scene.camera.center, (0, 33.0, 44.0))
     assert viewer.scene.camera.zoom == pytest.approx(7.0)
+
+
+def test_load_button_keeps_view(make_napari_viewer, v06_image_path) -> None:
+    """
+    Loading into an empty viewer fits the view to the data; loading again
+    keeps the view.
+    """
+    viewer = make_napari_viewer()
+    widget = OMEZarrpariWidget(viewer)
+    widget.text_box.setText(v06_image_path)
+    widget.load_btn.click()
+    # Fitted to the image (32 x 64 pixels of 0.5 x 0.25, translated by 10, 20)
+    np.testing.assert_allclose(
+        viewer.scene.camera.center[-2:], (17.75, 27.875), atol=0.5
+    )
+
+    viewer.scene.camera.center = (0, 33.0, 44.0)
+    viewer.scene.camera.zoom = 7.0
+    widget.load_btn.click()
+    np.testing.assert_allclose(viewer.scene.camera.center, (0, 33.0, 44.0))
+    assert viewer.scene.camera.zoom == pytest.approx(7.0)
+
+    # No layer list batch is left open
+    from ome_zarrpari._widget import _batch_depth
+
+    assert not _batch_depth

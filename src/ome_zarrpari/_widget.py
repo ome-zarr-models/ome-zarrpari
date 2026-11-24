@@ -1,5 +1,6 @@
+import contextlib
 import warnings
-from collections.abc import Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -130,13 +131,80 @@ class LayerSpec:
         return dict.fromkeys(layers, self.model)
 
 
+# Nesting depth of _batched, per layer list
+_batch_depth: dict[int, int] = {}
+
+
+@contextlib.contextmanager
+def _batched(viewer: "napari.Viewer") -> Iterator[None]:
+    """
+    Batch the layer list updates of a viewer, as in napari's
+    ``layers.clear()``. The canvas is then only updated once at the end,
+    which is much faster when adding or removing many layers.
+
+    Unlike ``layers.batched_update()``, this can be nested: only the
+    outermost batch is a napari batch (napari's batch is a flag, so an
+    inner batch would end it early).
+    """
+    key = id(viewer.layers)
+    depth = _batch_depth.get(key, 0)
+    _batch_depth[key] = depth + 1
+    try:
+        if depth:
+            yield
+        else:
+            with viewer.layers.batched_update():
+                yield
+    finally:
+        if depth:
+            _batch_depth[key] = depth
+        else:
+            del _batch_depth[key]
+
+
 def _add_layers(
     viewer: "napari.Viewer", specs: list[LayerSpec]
 ) -> AddedLayers:
     added_layers: AddedLayers = {}
-    for spec in specs:
-        added_layers.update(spec.add_to(viewer))
+    with _batched(viewer):
+        for spec in specs:
+            added_layers.update(spec.add_to(viewer))
     return added_layers
+
+
+def _remove_layers(
+    viewer: "napari.Viewer", layers: Iterable[napari.layers.Layer]
+) -> None:
+    """
+    Remove layers from a viewer, skipping layers that were already removed.
+
+    The layer list updates are batched, which is much faster than removing
+    many layers one by one.
+    """
+    with _batched(viewer):
+        for layer in list(layers):
+            if layer in viewer.layers:
+                viewer.layers.remove(layer)
+
+
+@contextlib.contextmanager
+def _keep_view(
+    viewer: "napari.Viewer", *, keep: bool = True
+) -> Iterator[None]:
+    """
+    Keep the camera and the current slice of the viewer (if keep is True)
+    while layers are replaced; napari resets the view when a layer is added
+    to an empty viewer.
+    """
+    camera = viewer.scene.camera.model_dump(
+        include={"center", "zoom", "angles"}
+    )
+    point = viewer.dims.point
+    yield
+    if keep:
+        if len(viewer.dims.point) == len(point):
+            viewer.dims.point = point
+        viewer.scene.camera.update(camera)
 
 
 class LoadedScene:
@@ -217,12 +285,13 @@ class LoadedScene:
             self._warn_not_placed(not_placed, coordinate_system)
             return removed, {}
 
-        removed = self._remove_layers()
-        self._separate_layers = {}
-        if fused:
-            added = self._add_fused(affines, coordinate_system)
-        else:
-            added = self._add_separate(affines, coordinate_system)
+        with _batched(self.viewer):
+            removed = self._remove_layers()
+            self._separate_layers = {}
+            if fused:
+                added = self._add_fused(affines, coordinate_system)
+            else:
+                added = self._add_separate(affines, coordinate_system)
         self.layers = dict(added)
         self.fused = fused
         return removed, added
@@ -376,9 +445,7 @@ class LoadedScene:
         Remove the shown layers from the viewer.
         """
         removed = list(self.layers)
-        for layer in removed:
-            if layer in self.viewer.layers:
-                self.viewer.layers.remove(layer)
+        _remove_layers(self.viewer, removed)
         self.layers = {}
         return removed
 
@@ -544,18 +611,20 @@ class OMEZarrpariWidget(QWidget):
     def _on_load(self) -> None:
         path = self.text_box.text().strip()
         if path:
-            self._clear()
-            self._load_ome_zarr(path)
+            # Keep the view, unless there is nothing shown yet
+            with (
+                _keep_view(self.viewer, keep=len(self.viewer.layers) > 0),
+                _batched(self.viewer),
+            ):
+                self._clear()
+                self._load_ome_zarr(path)
 
     def _clear(self) -> None:
         """
         Remove the layers loaded by this widget from the viewer, and forget
         any loaded images and scene. Other layers are kept.
         """
-        for layer in list(self.added_layers):
-            # Skip layers already removed by the user
-            if layer in self.viewer.layers:
-                self.viewer.layers.remove(layer)
+        _remove_layers(self.viewer, self.added_layers)
         self.added_layers.clear()
         self._layer_multiscales.clear()
         self._layer_coordinate_systems.clear()
@@ -739,22 +808,13 @@ class OMEZarrpariWidget(QWidget):
             fused = bool(self.scene.fused)
         coordinate_system = self.coord_system_dropdown.currentText() or None
         # Switching a shown scene can replace its layers (e.g. fused layers
-        # are resampled), and napari resets the view when a layer is added
-        # to an empty viewer. Keep the view instead, like when only the layer
-        # affines change.
-        keep_view = self.scene.fused is not None
-        camera = self.viewer.scene.camera.model_dump(
-            include={"center", "zoom", "angles"}
-        )
-        point = self.viewer.dims.point
-        removed, added = self.scene.show(coordinate_system, fused=fused)
+        # are resampled): keep the view, like when only the layer affines
+        # change
+        with _keep_view(self.viewer, keep=self.scene.fused is not None):
+            removed, added = self.scene.show(coordinate_system, fused=fused)
         for layer in removed:
             self.added_layers.pop(layer, None)
         self.added_layers.update(added)
-        if keep_view:
-            if len(self.viewer.dims.point) == len(point):
-                self.viewer.dims.point = point
-            self.viewer.scene.camera.update(camera)
 
     def _on_coord_system_changed(self, coordinate_system: str) -> None:
         if coordinate_system:
@@ -1028,11 +1088,15 @@ def _load_ome_zarr_image(
     added layer was created from.
     """
     added_layers: AddedLayers = {}
-    for spec in _image_layer_specs(zarr_group, image, visible=visible):
-        layers = spec.add_to(viewer)
-        added_layers.update(layers)
-        if layer_multiscales is not None:
-            layer_multiscales.update(dict.fromkeys(layers, spec.multiscale))
+    specs = _image_layer_specs(zarr_group, image, visible=visible)
+    with _batched(viewer):
+        for spec in specs:
+            layers = spec.add_to(viewer)
+            added_layers.update(layers)
+            if layer_multiscales is not None:
+                layer_multiscales.update(
+                    dict.fromkeys(layers, spec.multiscale)
+                )
     return added_layers
 
 

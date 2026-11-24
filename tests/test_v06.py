@@ -13,7 +13,8 @@ from ome_zarr_models.v06.coordinate_transforms import (
     Translation,
 )
 
-from ome_zarrpari._scene import SceneGraph, to_napari_affine
+from ome_zarrpari._scene import SceneGraph
+from ome_zarrpari._transforms import to_napari_affine
 from ome_zarrpari._widget import (
     OMEZarrpariWidget,
     _channel_display,
@@ -678,7 +679,7 @@ def test_scene_graph_unresolved(tmp_path) -> None:
     assert graph._resolve(None) is None
     assert graph._resolve(CoordinateSystemIdentifier(path="other")) is None
     with pytest.warns(UserWarning, match="Ignoring 'translation' transform"):
-        graph._add_transform(Translation(translation=[0, 0, 1]), None, None)
+        graph.add_transform(Translation(translation=[0, 0, 1]), None, None)
 
 
 def test_to_napari_affine() -> None:

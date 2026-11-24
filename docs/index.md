@@ -92,6 +92,12 @@ The image at index `i` is downsampled by a factor of `2**i`.
 
 ## Changelog
 
+**1.1.1**
+
+- Fix low resolution images showing through higher resolution images in fused scenes.
+  Where images overlap, the image with the finest pixel size is now shown on top
+  (of images with equal pixel sizes, the last one), instead of the maximum value.
+
 **1.1.0**
 
 - Add support for loading OME-Zarr 0.6 images and labels.
@@ -106,7 +112,6 @@ The image at index `i` is downsampled by a factor of `2**i`.
 - Add an option to fuse the images of a scene into one layer per channel and label image,
   for fast viewing of scenes with many images
   (`fuse_scenes` in `load_ome_zarr`, and the "Load fused scene" checkbox in the widget, off by default).
-  Where images overlap, the image with the finest pixel size is shown on top.
 - Apply the translation of the highest resolution dataset to the loaded layers
   (previously only the scale was applied).
 - Axes without a unit get the napari default unit ('pixel'), as in napari-ome-zarr

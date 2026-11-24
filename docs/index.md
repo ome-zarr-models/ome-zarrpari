@@ -92,7 +92,7 @@ The image at index `i` is downsampled by a factor of `2**i`.
 
 ## Changelog
 
-**Unreleased**
+**1.1.0**
 
 - Add support for loading OME-Zarr 0.6 images and labels.
   Images are loaded in their intrinsic physical coordinate system.

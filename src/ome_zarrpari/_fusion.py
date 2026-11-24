@@ -6,8 +6,9 @@ per image.
 Each image is placed by its homogeneous matrix from (highest resolution)
 array indices to world coordinates. Images that are only shifted relative
 to the fused pixels are copied (rounded to whole pixels), others (rotated,
-scaled) are resampled. Overlapping pixels show the maximum value for images,
-and the last non-zero value for labels.
+scaled) are resampled. Overlapping pixels show the image with the finest
+pixel size, and the last image of those with equal pixel sizes; for labels
+only non-zero values are drawn.
 
 Based on FusedScene in https://github.com/ome/napari-ome-zarr/pull/175.
 """
@@ -167,8 +168,10 @@ def fuse(tiles: list[Tile], *, is_labels: bool) -> FusedImage:
     into a single lazy multiscale image.
 
     The fused image has the finest pixel size of the images, and covers all
-    images. Overlapping pixels show the maximum value for images, and the
-    last non-zero value for labels.
+    images. Overlapping pixels show the image with the finest pixel size,
+    and the last image of those with equal pixel sizes, so coarse images
+    (e.g. an overview) never show through finer ones. For labels only
+    non-zero values are drawn.
     """
     ndim = tiles[0].data[0].ndim
     dtype = tiles[0].data[0].dtype
@@ -178,6 +181,17 @@ def fuse(tiles: list[Tile], *, is_labels: bool) -> FusedImage:
         [np.linalg.norm(matrix[:-1, :-1], axis=1) for matrix in tile_matrices]
         for tile_matrices in matrices
     ]
+
+    # Draw order: coarsest (highest resolution) pixel volume first, so finer
+    # images are drawn over coarser ones; a stable sort keeps the order of
+    # images with (nearly) equal pixel sizes
+    draw_order = sorted(
+        range(len(tiles)),
+        key=lambda i: -np.round(np.log(np.prod(pixel_sizes[i][0])), 6),
+    )
+    tiles = [tiles[i] for i in draw_order]
+    matrices = [matrices[i] for i in draw_order]
+    pixel_sizes = [pixel_sizes[i] for i in draw_order]
 
     # Fused image: the finest pixel size, covering all tiles;
     # fused pixel 0 is centered at origin
@@ -280,7 +294,7 @@ def _render_chunk(
     # 2. Fetch all overlapping data in parallel
     fetched = da.compute(*[task[1] for task in tasks])
 
-    # 3. Apply the fetched data to the chunk in order
+    # 3. Draw the fetched data over the chunk in order, finest image last
     for (placement, _, region_lo, lo, hi), values in zip(
         tasks, fetched, strict=True
     ):
@@ -291,19 +305,19 @@ def _render_chunk(
             )
         ]
         if region_lo is None:
-            valid = (
-                values != 0 if is_labels else np.ones(values.shape, dtype=bool)
-            )
-        else:
-            values = placement.resample(values, region_lo, lo, hi)
-            valid = ~np.isnan(values)
-            if np.issubdtype(block.dtype, np.integer):
-                values = np.round(values)
             if is_labels:
-                valid &= values != 0
-            values = np.where(valid, values, 0).astype(block.dtype)
+                valid = values != 0
+                target[valid] = values[valid]
+            else:
+                # Covers the whole region: copy
+                target[...] = values
+            continue
+        values = placement.resample(values, region_lo, lo, hi)
+        valid = ~np.isnan(values)
         if is_labels:
-            target[valid] = values[valid]
-        else:
-            target[valid] = np.maximum(target[valid], values[valid])
+            valid &= values != 0
+        values = values[valid]
+        if np.issubdtype(block.dtype, np.integer):
+            values = np.round(values)
+        target[valid] = values.astype(block.dtype)
     return chunk_data

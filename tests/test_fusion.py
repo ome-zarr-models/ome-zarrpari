@@ -54,8 +54,8 @@ def test_fuse_shifted() -> None:
 @pytest.mark.parametrize("is_labels", [False, True])
 def test_fuse_overlap(is_labels) -> None:
     """
-    Overlapping pixels show the maximum value for images, and the last
-    non-zero value for labels.
+    Overlapping pixels with equal pixel sizes show the last image; for
+    labels only non-zero values are drawn.
     """
     a = np.array([[5, 1, 0]], dtype=np.uint8)
     b = np.array([[2, 0, 3]], dtype=np.uint8)
@@ -66,8 +66,36 @@ def test_fuse_overlap(is_labels) -> None:
         ],
         is_labels=is_labels,
     )
-    expected = [[2, 1, 3]] if is_labels else [[5, 1, 3]]
+    expected = [[2, 1, 3]] if is_labels else [[2, 0, 3]]
     np.testing.assert_array_equal(fused.data[0].compute(), expected)
+
+
+@pytest.mark.parametrize("is_labels", [False, True])
+@pytest.mark.parametrize("fine_first", [False, True])
+def test_fuse_finest_on_top(is_labels, fine_first) -> None:
+    """
+    Finer images are drawn over coarser ones, whatever their order,
+    so a bright coarse image doesn't show through a dim fine one.
+    """
+    coarse = Tile(
+        _multiscale(np.full((4, 4), 200, dtype=np.uint8)),
+        _shift((0, 0), scale=(2, 2)),
+    )
+    fine = Tile(
+        _multiscale(np.full((4, 4), 10, dtype=np.uint8)),
+        _shift((2.5, 2.5)),
+    )
+    fused = fuse(
+        [fine, coarse] if fine_first else [coarse, fine], is_labels=is_labels
+    )
+    assert fused.scale == (1, 1)
+    assert fused.translate == (-0.5, -0.5)
+    result = fused.data[0].compute()
+    # The fine image, at fused pixels 3 to 6
+    assert np.all(result[3:7, 3:7] == 10)
+    # The (resampled) coarse image, outside the fine image
+    assert result[1, 1] == 200
+    assert result[1, 5] == 200
 
 
 def test_fuse_rotated_labels() -> None:

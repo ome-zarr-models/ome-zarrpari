@@ -39,8 +39,8 @@ By default each scene image is shown as separate layers.
 Fused layers are lazy: only the parts you look at are read and fused.
 Images that are only shifted are copied (rounded to whole pixels); rotated or scaled
 images are resampled.
-Where images overlap, the fused image shows the maximum value, and fused labels show
-the last non-zero label.
+Where images overlap, the image with the finest pixel size is shown on top
+(of images with equal pixel sizes, the last one); fused labels only draw non-zero labels.
 Images with different data types are fused into separate layers.
 The checkbox applies when loading; the coordinate system dropdown re-shows the most
 recently loaded scene.
@@ -91,6 +91,12 @@ The image at index `i` is downsampled by a factor of `2**i`.
 
 
 ## Changelog
+
+**1.1.1**
+
+- Fix low resolution images showing through higher resolution images in fused scenes.
+  Where images overlap, the image with the finest pixel size is now shown on top
+  (of images with equal pixel sizes, the last one), instead of the maximum value.
 
 **1.1.0**
 

@@ -759,8 +759,9 @@ def _tile_data(scene_path: str, tile: str, channel: int | None) -> np.ndarray:
 def test_load_v06_scene_fused(make_napari_viewer, v06_scene_path) -> None:
     viewer = make_napari_viewer()
     widget = OMEZarrpariWidget(viewer)
-    # Fused by default
-    assert widget.fuse_checkbox.isChecked()
+    # Not fused by default
+    assert not widget.fuse_checkbox.isChecked()
+    widget.fuse_checkbox.setChecked(True)
     widget._load_ome_zarr(v06_scene_path, visible=False)
     assert widget.load_pane_status_text == "Successfully loaded"
 
@@ -962,3 +963,48 @@ def test_channel_display(channel, n_channels, colormap) -> None:
     assert display["blending"] == (
         "translucent_no_depth" if channel == 0 else "additive"
     )
+
+
+def test_load_button_clears_viewer(
+    make_napari_viewer, v06_image_path, v06_scene_path
+) -> None:
+    """
+    Pressing Load first removes the layers loaded by the plugin (keeping
+    other layers), and forgets the previous data.
+    """
+    viewer = make_napari_viewer()
+    viewer.add_image(np.zeros((4, 4)), name="other")
+    widget = OMEZarrpariWidget(viewer)
+
+    widget.text_box.setText(v06_scene_path)
+    widget.load_btn.click()
+    assert viewer.layers[0].name == "other"
+    assert len(viewer.layers) > 1
+    assert widget.coord_system_dropdown.count() > 0
+
+    widget.text_box.setText(v06_image_path)
+    widget.load_btn.click()
+    widget.load_btn.click()
+    assert widget.load_pane_status_text == "Successfully loaded"
+    assert [layer.name for layer in viewer.layers] == [
+        "other",
+        "my_image",
+        "my_image [1]",
+        "cells",
+    ]
+    plugin_layers = set(viewer.layers) - {viewer.layers["other"]}
+    assert set(widget.added_layers) == plugin_layers
+    assert set(widget._layer_multiscales) == plugin_layers
+
+    # Layers the user already removed are skipped
+    viewer.layers.remove("cells")
+    widget.load_btn.click()
+    assert [layer.name for layer in viewer.layers] == [
+        "other",
+        "my_image",
+        "my_image [1]",
+        "cells",
+    ]
+    assert widget.scene is None
+    assert widget.coord_system_dropdown.count() == 0
+    assert not widget.coord_system_dropdown.isEnabled()

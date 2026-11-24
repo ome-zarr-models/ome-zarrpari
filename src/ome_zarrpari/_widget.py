@@ -466,7 +466,7 @@ class OMEZarrpariWidget(QWidget):
 
         # Fuse the images of scenes into one layer per channel/label image
         self.fuse_checkbox = QCheckBox("Load fused scene")
-        self.fuse_checkbox.setChecked(True)
+        self.fuse_checkbox.setChecked(False)
         self.fuse_checkbox.setToolTip(
             "Load the images of an OME-Zarr 0.6 scene (e.g. tiles) as a "
             "single layer per channel and label image, instead of separate "
@@ -544,7 +544,27 @@ class OMEZarrpariWidget(QWidget):
     def _on_load(self) -> None:
         path = self.text_box.text().strip()
         if path:
+            self._clear()
             self._load_ome_zarr(path)
+
+    def _clear(self) -> None:
+        """
+        Remove the layers loaded by this widget from the viewer, and forget
+        any loaded images and scene. Other layers are kept.
+        """
+        for layer in list(self.added_layers):
+            # Skip layers already removed by the user
+            if layer in self.viewer.layers:
+                self.viewer.layers.remove(layer)
+        self.added_layers.clear()
+        self._layer_multiscales.clear()
+        self._layer_coordinate_systems.clear()
+        self.scene = None
+        self.coord_system_dropdown.blockSignals(True)
+        self.coord_system_dropdown.clear()
+        self.coord_system_dropdown.setEnabled(False)
+        self.coord_system_dropdown.blockSignals(False)
+        self._on_layer_selection_changed()
 
     def _on_browse(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")

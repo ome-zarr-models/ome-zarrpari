@@ -18,6 +18,7 @@ This is what the widget looks like:
 
 You can either copy/paste a URL or local path into the text box, or press "Browse" to open a file browser and select a local directory.
 Then press the "Load OME-Zarr" button to load the image.
+This first removes the layers previously loaded by the plugin; other layers are kept.
 
 ### Scenes
 OME-Zarr 0.6 scenes combine several images (e.g. tiles) with coordinate transformations
@@ -31,10 +32,10 @@ Only transformations that can be converted to an affine transformation are suppo
 Images that can't be placed in the selected scene coordinate system are shown in their
 own (intrinsic) coordinate system, with a warning.
 
-Scenes with many images (e.g. hundreds of tiles) are slow to show as separate layers,
-so by default ("Load fused scene", ticked) the scene images are fused into a single
+Scenes with many images (e.g. hundreds of tiles) are slow to show as separate layers.
+Tick "Load fused scene" before loading to fuse the scene images into a single
 layer per channel and per label image.
-Untick "Load fused scene" before loading to show each scene image as separate layers.
+By default each scene image is shown as separate layers.
 Fused layers are lazy: only the parts you look at are read and fused.
 Images that are only shifted are copied (rounded to whole pixels); rotated or scaled
 images are resampled.
@@ -98,9 +99,10 @@ The image at index `i` is downsampled by a factor of `2**i`.
   Note that OME-Zarr 0.6 support in `ome-zarr-models` is still in beta.
 - Add support for loading OME-Zarr 0.6 scenes.
   Scene images are placed in a scene coordinate system, which can be selected in the widget.
+- Pressing "Load OME-Zarr" first removes the layers previously loaded by the plugin.
 - Add an option to fuse the images of a scene into one layer per channel and label image,
   for fast viewing of scenes with many images
-  (`fuse_scenes` in `load_ome_zarr`, and the "Load fused scene" checkbox in the widget, on by default).
+  (`fuse_scenes` in `load_ome_zarr`, and the "Load fused scene" checkbox in the widget, off by default).
 - Apply the translation of the highest resolution dataset to the loaded layers
   (previously only the scale was applied).
 - Axes without a unit get the napari default unit ('pixel'), as in napari-ome-zarr

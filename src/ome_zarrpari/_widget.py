@@ -1,15 +1,22 @@
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal
 
 import dask.array as da
 import napari.layers
+import numpy as np
 import ome_zarr_models.v04
 import ome_zarr_models.v04.multiscales
 import ome_zarr_models.v05
 import ome_zarr_models.v05.multiscales
+import ome_zarr_models.v06
+import ome_zarr_models.v06.multiscales
 import zarr
 from napari.settings import get_settings
 from ome_zarr_models import open_ome_zarr
-from ome_zarr_models.common.coordinate_transformations import VectorScale
+from ome_zarr_models.common.coordinate_transformations import (
+    VectorScale,
+    VectorTranslation,
+)
 from qtpy.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -24,15 +31,36 @@ if TYPE_CHECKING:
 
 from qtpy.QtWidgets import QLabel
 
-AnyImage = ome_zarr_models.v04.Image | ome_zarr_models.v05.Image
-AnyImageLabel = ome_zarr_models.v04.ImageLabel | ome_zarr_models.v05.ImageLabel
+AnyImage = (
+    ome_zarr_models.v04.Image
+    | ome_zarr_models.v05.Image
+    | ome_zarr_models.v06.Image
+)
+AnyImageLabel = (
+    ome_zarr_models.v04.ImageLabel
+    | ome_zarr_models.v05.ImageLabel
+    | ome_zarr_models.v06.ImageLabel
+)
 
 SUPPORTED_CLASSES = (AnyImage, AnyImageLabel)
 
 AnyMultiscale = (
     ome_zarr_models.v04.multiscales.Multiscale
     | ome_zarr_models.v05.multiscales.Multiscale
+    | ome_zarr_models.v06.multiscales.Multiscale
 )
+
+AnyAxis = (
+    ome_zarr_models.v04.axes.Axis
+    | ome_zarr_models.v05.axes.Axis
+    | ome_zarr_models.v06.coordinate_transforms.Axis
+)
+
+IMAGE_LABEL_CLASSES: dict[str, type[AnyImageLabel]] = {
+    "0.4": ome_zarr_models.v04.ImageLabel,
+    "0.5": ome_zarr_models.v05.ImageLabel,
+    "0.6": ome_zarr_models.v06.ImageLabel,
+}
 
 
 class OMEZarrpariWidget(QWidget):
@@ -149,7 +177,7 @@ def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
     """
     Get axis labels from Multiscale metadata.
     """
-    axis_labels_raw = [axis.name for axis in multiscale.axes]
+    axis_labels_raw = [axis.name for axis in _get_axes(multiscale)]
     if any(label is None for label in axis_labels_raw):
         print(
             f"Warning: At least one axis label is None for multiscale '{multiscale.name}', "
@@ -160,38 +188,65 @@ def _get_axis_names(multiscale: AnyMultiscale) -> list[str] | None:
         return [str(label) for label in axis_labels_raw]
 
 
-def _get_axis_units(multiscale: AnyMultiscale) -> list[str] | None:
+def _get_axis_units(multiscale: AnyMultiscale) -> list[str]:
     """
     Get axis units from Multiscale metadata.
 
+    Axes without a unit (e.g. channel axes) are given the napari default unit
+    ('pixel'), as in napari-ome-zarr.
+
     # TODO: convert strings to pint units if they make sense as physical units
     """
-    axis_units_raw = [axis.unit for axis in multiscale.axes]
-    if any(unit is None for unit in axis_units_raw):
-        print(
-            f"Warning: At least one unit is None for multiscale '{multiscale.name}', "
-            "not setting any axis units."
-        )
-        return None
-    else:
-        return [str(unit) for unit in axis_units_raw]
+    return [
+        "pixel" if axis.unit is None else str(axis.unit)
+        for axis in _get_axes(multiscale)
+    ]
 
 
-def _get_scale(multiscale: AnyMultiscale) -> list[float]:
+def _get_axes(multiscale: AnyMultiscale) -> Sequence[AnyAxis]:
+    """
+    Get the axes of the (intrinsic) physical coordinate system of a multiscale.
+    """
+    if isinstance(multiscale, ome_zarr_models.v06.multiscales.Multiscale):
+        return multiscale.intrinsic_coordinate_system.axes
+    return multiscale.axes
+
+
+def _get_scale_translation(
+    multiscale: AnyMultiscale,
+) -> tuple[list[float], list[float]]:
+    """
+    Get the scale and translation of the highest resolution dataset,
+    mapping array indices to the intrinsic physical coordinate system.
+    """
+    ndim = multiscale.ndim
     # datasets[0] is the highest resolution
-    scale_transform = multiscale.datasets[0].coordinateTransformations[0]
-    if isinstance(scale_transform, VectorScale):
-        return scale_transform.scale
-    else:
-        # Scale is stored in a Zarr array, default to no scaling
-        return [1] * multiscale.ndim
+    if isinstance(multiscale, ome_zarr_models.v06.multiscales.Multiscale):
+        # 0.6 dataset transforms are a scale, identity, or sequence of
+        # scale + translation, so the affine matrix is diagonal
+        (transform_v06,) = multiscale.datasets[0].coordinateTransformations
+        matrix = np.asarray(
+            transform_v06.as_affine().affine_matrix, dtype=float
+        )
+        return list(np.diag(matrix[:ndim, :ndim])), list(matrix[:ndim, ndim])
+
+    scale = [1.0] * ndim
+    translation = [0.0] * ndim
+    for transform in multiscale.datasets[0].coordinateTransformations:
+        # Scales/translations stored in Zarr arrays are not supported,
+        # so default to no scaling/translation
+        if isinstance(transform, VectorScale):
+            scale = list(transform.scale)
+        elif isinstance(transform, VectorTranslation):
+            translation = list(transform.translation)
+    return scale, translation
 
 
 def _get_channel_axis(multiscale: AnyMultiscale) -> int | None:
     """
     Get channel axis from Multiscale metadata.
     """
-    for i, axis in enumerate(multiscale.axes):
+    for i, axis in enumerate(_get_axes(multiscale)):
         if axis.type == "channel":
             return i
     return None
@@ -266,15 +321,11 @@ def _load_ome_zarr_image(
             image_label_group = zarr.open_group(
                 zarr_group.store_path / "labels" / path
             )
-            image_label_cls: type[AnyImageLabel]
-            if image.ome_zarr_version == "0.4":
-                image_label_cls = ome_zarr_models.v04.ImageLabel
-            elif image.ome_zarr_version == "0.5":
-                image_label_cls = ome_zarr_models.v05.ImageLabel
-            else:
+            if image.ome_zarr_version not in IMAGE_LABEL_CLASSES:
                 raise ValueError(
                     f"Can't handle OME-Zarr version {image.ome_zarr_version}"
                 )
+            image_label_cls = IMAGE_LABEL_CLASSES[image.ome_zarr_version]
             image_labels = image_label_cls.from_zarr(image_label_group)
             for multiscale in image_labels.ome_attributes.multiscales:
                 # TODO: correctly assign color from the label metdaata
@@ -312,16 +363,16 @@ def _add_multiscale_layer(
     ]
     axis_labels = _get_axis_names(multiscale)
     axis_units = _get_axis_units(multiscale)
-    scale = _get_scale(multiscale)
+    scale, translation = _get_scale_translation(multiscale)
     if layer_type == "image":
         channel_axis = _get_channel_axis(multiscale)
         # If there's a channel axis, remove the associated label/units/scale
         if channel_axis is not None:
             scale.pop(channel_axis)
+            translation.pop(channel_axis)
             if axis_labels is not None:
                 axis_labels.pop(channel_axis)
-            if axis_units is not None:
-                axis_units.pop(channel_axis)
+            axis_units.pop(channel_axis)
 
         return viewer.add_image(
             arrays,
@@ -332,6 +383,7 @@ def _add_multiscale_layer(
             channel_axis=channel_axis,
             units=axis_units,
             scale=scale,
+            translate=translation,
         )
     else:
         return viewer.add_labels(
@@ -342,4 +394,5 @@ def _add_multiscale_layer(
             axis_labels=axis_labels,
             units=axis_units,
             scale=scale,
+            translate=translation,
         )

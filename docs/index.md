@@ -4,7 +4,7 @@ icon: lucide/rocket
 
 # ome-zarrpari
 
-Load and use OME-Zarr 0.4 and 0.5 images and labels in napari, from any data source!
+Load and use OME-Zarr 0.4, 0.5 and 0.6 images and labels in napari, from any data source!
 
 Images are loaded into a *napari multiscale image layer*.
 This means higher resolution levels of the data are progressively loaded as you zoom in.
@@ -52,8 +52,8 @@ pip install "ome-zarrpari[all]"
 
 - `napari-ome-zarr` has no widget.
   The only way to load remote datasets is launching `napari` on the command line, or using Python scripting in the `napari` terminal.
-- `ome-zarrpari` supports OME-Zarr 0.4 and 0.5; `napari-ome-zarr` only supports version 0.4 (as of writing).
-- `ome-zarrpari` explicitly supports all versions of Python supported by `napari`.
+- `ome-zarrpari` supports OME-Zarr 0.4, 0.5 and 0.6 (beta); `napari-ome-zarr` only supports version 0.4 (as of writing).
+- `ome-zarrpari` explicitly supports all versions of Python supported by both `napari` and `ome-zarr-models`.
 
 ### How can I process OME-Zarr data once it's been loaded?
 
@@ -65,6 +65,18 @@ The image at index `i` is downsampled by a factor of `2**i`.
 
 
 ## Changelog
+
+**Unreleased**
+
+- Add support for loading OME-Zarr 0.6 images and labels.
+  Images are loaded in their intrinsic physical coordinate system.
+  Note that OME-Zarr 0.6 support in `ome-zarr-models` is still in beta.
+- Apply the translation of the highest resolution dataset to the loaded layers
+  (previously only the scale was applied).
+- Axes without a unit get the napari default unit ('pixel'), as in napari-ome-zarr
+  (previously no units were set if any axis had no unit, with a warning).
+- Require `ome-zarr-models >= 1.9`.
+- Drop support for Python 3.11, as `ome-zarr-models` no longer supports it.
 
 **1.0.2**
 

@@ -134,7 +134,9 @@ def test_load_v06_image(make_napari_viewer, v06_image_path) -> None:
         ]
 
 
-def test_load_v06_image_missing_unit(make_napari_viewer, v06_image_path) -> None:
+def test_load_v06_image_missing_unit(
+    make_napari_viewer, v06_image_path
+) -> None:
     """
     Axes without a unit are given the napari default unit ('pixel').
     """
@@ -153,3 +155,121 @@ def test_load_v06_image_missing_unit(make_napari_viewer, v06_image_path) -> None
             "micrometer",
             "pixel",
         ]
+
+
+STAGE_OFFSET = (100.0, 200.0)
+
+
+def _add_stage_coordinate_system(
+    group: zarr.Group, channel_scale: float
+) -> None:
+    """
+    Add a 'stage' coordinate system to a 0.6 multiscale image, translated
+    from the intrinsic coordinate system by STAGE_OFFSET (and scaled by
+    channel_scale along a channel axis, if present).
+    """
+    attrs = group.attrs.asdict()
+    multiscale = attrs["ome"]["multiscales"][0]
+    (physical,) = multiscale["coordinateSystems"]
+    axes = [
+        {**axis, "name": axis["name"] + "_stage"} for axis in physical["axes"]
+    ]
+    multiscale["coordinateSystems"].append({"name": "stage", "axes": axes})
+    n_extra = len(axes) - len(STAGE_OFFSET)
+    multiscale["coordinateTransformations"] = [
+        {
+            "type": "sequence",
+            "input": {"name": "physical"},
+            "output": {"name": "stage"},
+            "transformations": [
+                {
+                    "type": "scale",
+                    "scale": [channel_scale] * n_extra + [1.0, 1.0],
+                },
+                {
+                    "type": "translation",
+                    "translation": [0.0] * n_extra + list(STAGE_OFFSET),
+                },
+            ],
+        }
+    ]
+    group.attrs.put(attrs)
+
+
+def test_v06_image_coordinate_systems(
+    make_napari_viewer, v06_image_path
+) -> None:
+    root = zarr.open_group(v06_image_path, mode="r+")
+    _add_stage_coordinate_system(root, channel_scale=1.0)
+    _add_stage_coordinate_system(root["labels/cells"], channel_scale=1.0)
+
+    viewer = make_napari_viewer()
+    widget = OMEZarrpariWidget(viewer)
+    widget._load_ome_zarr(v06_image_path, visible=False)
+    dropdown = widget.image_coord_system_dropdown
+    image_layers = [viewer.layers["my_image"], viewer.layers["my_image [1]"]]
+    labels_layer = viewer.layers["cells"]
+
+    # Selecting a layer lists the coordinate systems of its image
+    viewer.layers.selection.active = image_layers[1]
+    assert [dropdown.itemText(i) for i in range(dropdown.count())] == [
+        "physical",
+        "stage",
+    ]
+    assert dropdown.currentText() == "physical"
+    assert dropdown.isEnabled()
+
+    # Choosing a coordinate system moves all layers (channels) of the image,
+    # but not the labels
+    dropdown.setCurrentText("stage")
+    for layer in image_layers:
+        np.testing.assert_allclose(
+            layer.data_to_world((0, 0)),
+            np.add(TRANSLATION, STAGE_OFFSET),
+        )
+        assert tuple(layer.axis_labels) == ("y_stage", "x_stage")
+    np.testing.assert_allclose(labels_layer.data_to_world((0, 0)), TRANSLATION)
+
+    # The chosen coordinate system is remembered per image
+    viewer.layers.selection.active = labels_layer
+    assert dropdown.currentText() == "physical"
+    viewer.layers.selection.active = image_layers[0]
+    assert dropdown.currentText() == "stage"
+
+    # And can be switched back
+    dropdown.setCurrentText("physical")
+    for layer in image_layers:
+        np.testing.assert_allclose(layer.data_to_world((0, 0)), TRANSLATION)
+        assert tuple(layer.axis_labels) == ("y", "x")
+
+
+def test_v06_image_coordinate_system_changing_channels(
+    make_napari_viewer, v06_image_path
+) -> None:
+    """
+    Coordinate systems that change the channel axis can't be shown in napari.
+    """
+    root = zarr.open_group(v06_image_path, mode="r+")
+    _add_stage_coordinate_system(root, channel_scale=2.0)
+    _add_stage_coordinate_system(root["labels/cells"], channel_scale=2.0)
+
+    viewer = make_napari_viewer()
+    widget = OMEZarrpariWidget(viewer)
+    widget._load_ome_zarr(v06_image_path, visible=False)
+    dropdown = widget.image_coord_system_dropdown
+
+    viewer.layers.selection.active = viewer.layers["my_image"]
+    dropdown.setCurrentText("stage")
+    assert widget.load_pane_status_text.startswith("Can't show 'my_image'")
+    assert dropdown.currentText() == "physical"
+    np.testing.assert_allclose(
+        viewer.layers["my_image"].data_to_world((0, 0)), TRANSLATION
+    )
+
+    # The labels have no channel axis, so can be shown
+    viewer.layers.selection.active = viewer.layers["cells"]
+    dropdown.setCurrentText("stage")
+    np.testing.assert_allclose(
+        viewer.layers["cells"].data_to_world((0, 0)),
+        np.add(TRANSLATION, STAGE_OFFSET),
+    )

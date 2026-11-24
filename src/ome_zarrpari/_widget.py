@@ -738,10 +738,23 @@ class OMEZarrpariWidget(QWidget):
         if fused is None:
             fused = bool(self.scene.fused)
         coordinate_system = self.coord_system_dropdown.currentText() or None
+        # Switching a shown scene can replace its layers (e.g. fused layers
+        # are resampled), and napari resets the view when a layer is added
+        # to an empty viewer. Keep the view instead, like when only the layer
+        # affines change.
+        keep_view = self.scene.fused is not None
+        camera = self.viewer.scene.camera.model_dump(
+            include={"center", "zoom", "angles"}
+        )
+        point = self.viewer.dims.point
         removed, added = self.scene.show(coordinate_system, fused=fused)
         for layer in removed:
             self.added_layers.pop(layer, None)
         self.added_layers.update(added)
+        if keep_view:
+            if len(self.viewer.dims.point) == len(point):
+                self.viewer.dims.point = point
+            self.viewer.scene.camera.update(camera)
 
     def _on_coord_system_changed(self, coordinate_system: str) -> None:
         if coordinate_system:

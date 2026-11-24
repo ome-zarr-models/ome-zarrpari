@@ -29,7 +29,8 @@ requires-python = ">=3.12,<3.14"
 # See best practices: https://napari.org/stable/plugins/building_a_plugin/best_practices.html
 dependencies = [
     "qtpy",
-    "napari",
+    # viewer.scene (camera) needs napari 0.9
+    "napari>=0.9",
     "ome-zarr-models>=1.9",
     # Not a direct dependency, but pin to avoid this bug: https://github.com/zarr-developers/pydantic-zarr/issues/147
     # < 0.11: pydantic-zarr 0.11 removed GroupSpec.from_zarr(depth=...), which

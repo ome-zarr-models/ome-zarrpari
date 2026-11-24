@@ -1008,3 +1008,24 @@ def test_load_button_clears_viewer(
     assert widget.scene is None
     assert widget.coord_system_dropdown.count() == 0
     assert not widget.coord_system_dropdown.isEnabled()
+
+
+@pytest.mark.parametrize("fused", [False, True])
+def test_switch_scene_coordinate_system_keeps_view(
+    make_napari_viewer, v06_scene_path, fused
+) -> None:
+    """
+    Switching the scene coordinate system keeps the camera, also when the
+    (fused) layers are replaced.
+    """
+    viewer = make_napari_viewer()
+    widget = OMEZarrpariWidget(viewer)
+    widget.fuse_checkbox.setChecked(fused)
+    widget._load_ome_zarr(v06_scene_path, visible=False)
+    viewer.scene.camera.center = (0, 33.0, 44.0)
+    viewer.scene.camera.zoom = 7.0
+
+    widget.coord_system_dropdown.setCurrentText("rotated")
+    assert widget.coord_system_dropdown.currentText() == "rotated"
+    np.testing.assert_allclose(viewer.scene.camera.center, (0, 33.0, 44.0))
+    assert viewer.scene.camera.zoom == pytest.approx(7.0)

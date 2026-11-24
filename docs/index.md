@@ -100,6 +100,8 @@ The image at index `i` is downsampled by a factor of `2**i`.
 - Add support for loading OME-Zarr 0.6 scenes.
   Scene images are placed in a scene coordinate system, which can be selected in the widget.
 - Pressing "Load OME-Zarr" first removes the layers previously loaded by the plugin.
+- Switching the scene coordinate system keeps the current view, also for fused scenes.
+- Require napari >= 0.9.
 - Add an option to fuse the images of a scene into one layer per channel and label image,
   for fast viewing of scenes with many images
   (`fuse_scenes` in `load_ome_zarr`, and the "Load fused scene" checkbox in the widget, off by default).
